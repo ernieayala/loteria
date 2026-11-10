@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" data-theme="retro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ece3ca" />
+    <title>Lotería</title>
+  </head>
+  <body class="bg-base-200 text-base-content antialiased">
+    <!-- Live regions sit outside #app so they persist across renders; a region rebuilt with its new text is often not read. -->
+    <div id="announcer" class="sr-only" role="status" aria-atomic="true"></div>
+    <div id="notice" class="toast toast-top toast-center z-10" role="alert" aria-atomic="true"></div>
+    <!-- One column the height of the small viewport (browser bars showing), so a turn never needs a scroll. min-h, not h: zoomed text grows the page instead of clipping. -->
+    <main
+      id="app"
+      class="mx-auto flex min-h-svh w-full max-w-md flex-col gap-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    ></main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

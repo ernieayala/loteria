@@ -1,0 +1,213 @@
+@import 'tailwindcss';
+
+/* daisyUI 5 as a Tailwind v4 plugin. "retro" is warm paper and ink, close to a printed Lotería deck. */
+@plugin "daisyui" {
+  themes: retro --default;
+}
+
+/*
+ * Retro with the two colors that carried text below WCAG AA made darker, same hues. Toasts sit on
+ * info and the reconnecting banner on warning, both with their cream -content text at 14px, which
+ * needs 4.5:1.
+ */
+@plugin "daisyui/theme" {
+  name: 'retro';
+  default: true;
+  --color-info: oklch(48% 0.13 241.966);
+  --color-warning: oklch(50% 0.17 41.116);
+}
+
+/*
+ * The design tokens this app adds to the theme.
+ *
+ * `edge` is the outline of anything a player has to find: card faces, tabla cells, text fields.
+ * It clears 3:1 against every surface it sits on (WCAG 1.4.11).
+ *
+ * Card faces and tabla cells are width containers, so `cqw` is 1% of the card's own width and
+ * their contents scale with the card. The floors keep the smallest cards readable.
+ *
+ * A tabla cell grows taller when text is enlarged, so at normal size its contents must fit the
+ * row the screen gives it. At 18cqw every card name, longest "El Violoncello", wraps to at most
+ * two lines (measured: two lines hold up to 19.4cqw); the rem bounds keep it 10-12px and let it
+ * grow with text zoom. The picture is also capped by screen height, because short wide phones
+ * give wide cells but short rows.
+ */
+@theme {
+  --color-edge: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+
+  --text-face-number: max(0.625rem, 12cqw);
+  --text-face-picture: 50cqw;
+  --text-face-name: max(0.75rem, 13cqw);
+  --text-cell-picture: min(42cqw, 3.8svh);
+  --text-cell-name: clamp(0.625rem, 18cqw, 0.75rem);
+  --spacing-face-inset: 4cqw;
+  --spacing-bean: 38cqw;
+}
+
+/*
+ * Where a bean rests on a card. render.ts sets --x and --y (the bean's center, always inside the
+ * middle 60% of the card) and --turn (its tilt), plus the waypoints of its roll, all worked out
+ * from the round and the card so a bean lies in the same place on every render and every phone.
+ */
+@utility bean-spot {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--spacing-bean);
+  aspect-ratio: 100 / 64;
+  translate: -50% -50%;
+  rotate: var(--turn);
+  pointer-events: none;
+}
+
+/*
+ * A frijol: kidney-shaped, shaded from a highlight to a dark rim, with the light eye a real bean
+ * has. Its outline clears 11:1 against the card. The shadow lifts it off the paper.
+ */
+@utility bean {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='38%25' cy='32%25' r='70%25'%3E%3Cstop offset='0' stop-color='%23b07048'/%3E%3Cstop offset='.55' stop-color='%236b3e26'/%3E%3Cstop offset='1' stop-color='%233d2216'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M10 34C6 16 24 4 48 4s46 10 46 28-18 28-40 28c-10 0-14-8-22-8C20 52 12 46 10 34z' fill='url(%23g)' stroke='%232b170e' stroke-width='3'/%3E%3Cellipse cx='44' cy='55' rx='6' ry='2' fill='%23f3e6cf' opacity='.85'/%3E%3Cellipse cx='34' cy='18' rx='13' ry='5' fill='%23fff' opacity='.3'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  filter: drop-shadow(0 1.5px 1px rgb(0 0 0 / 0.35));
+}
+
+/*
+ * A bean just put down is rolled like a die. Two motions run together:
+ *
+ * - bean-path moves the spot: it drops in at the top of the card (--x0), strikes one side
+ *   (--x1, --y1), bounces to the other (--x2, --y2), rolls back across (--x3, --y3) and wobbles to
+ *   rest at its spot, spinning flat on the table all the way and hopping a little between strikes.
+ * - bean-tumble turns the bean over and over in perspective, slowing as it travels.
+ *
+ * render.ts sets --roll-ms and --roll-elapsed: a re-render in the middle of a roll starts the
+ * animation that far in, so the roll carries on instead of restarting or jumping to the end.
+ * Without motion the bean simply appears. Each segment eases out, like a bean losing speed.
+ */
+@keyframes bean-path {
+  0% {
+    left: var(--x0);
+    top: -10%;
+    scale: 1.35;
+    rotate: calc(var(--turn) - 540deg);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.3, 0, 0.7, 1);
+  }
+  8% {
+    opacity: 1;
+  }
+  22% {
+    left: var(--x1);
+    top: var(--y1);
+    scale: 1;
+    rotate: calc(var(--turn) - 380deg);
+    animation-timing-function: ease-out;
+  }
+  31% {
+    scale: 1.12;
+  }
+  40% {
+    left: var(--x2);
+    top: var(--y2);
+    scale: 1;
+    rotate: calc(var(--turn) - 220deg);
+    animation-timing-function: ease-out;
+  }
+  50% {
+    scale: 1.06;
+  }
+  60% {
+    left: var(--x3);
+    top: var(--y3);
+    scale: 1;
+    rotate: calc(var(--turn) - 90deg);
+    animation-timing-function: ease-out;
+  }
+  82% {
+    left: var(--x);
+    top: var(--y);
+    rotate: calc(var(--turn) + 10deg);
+    animation-timing-function: ease-in-out;
+  }
+  92% {
+    rotate: calc(var(--turn) - 4deg);
+  }
+  100% {
+    left: var(--x);
+    top: var(--y);
+    scale: 1;
+    rotate: var(--turn);
+    opacity: 1;
+  }
+}
+@keyframes bean-tumble {
+  0% {
+    transform: perspective(160px) rotateX(1080deg) rotateY(180deg);
+  }
+  22% {
+    transform: perspective(160px) rotateX(700deg) rotateY(120deg);
+  }
+  40% {
+    transform: perspective(160px) rotateX(400deg) rotateY(60deg);
+  }
+  60% {
+    transform: perspective(160px) rotateX(160deg) rotateY(20deg);
+  }
+  82% {
+    transform: perspective(160px) rotateX(20deg) rotateY(0deg);
+  }
+  92% {
+    transform: perspective(160px) rotateX(-6deg) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(160px) rotateX(0deg) rotateY(0deg);
+  }
+}
+@utility bean-rolling {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: bean-path var(--roll-ms) linear both;
+    animation-delay: calc(var(--roll-elapsed) * -1);
+    & > .bean {
+      animation: bean-tumble var(--roll-ms) linear both;
+      animation-delay: calc(var(--roll-elapsed) * -1);
+    }
+  }
+}
+
+/*
+ * A bean on a card the caller never called, on the tabla the caller is checking. Struck through
+ * corner to corner in ink, the way a card is crossed out on paper: it reads at a glance, in any
+ * color vision, at 7:1 against the card.
+ */
+@utility crossed-out {
+  background-image: linear-gradient(
+    to top right,
+    transparent calc(50% - 1.5px),
+    var(--color-base-content) calc(50% - 1.5px),
+    var(--color-base-content) calc(50% + 1.5px),
+    transparent calc(50% + 1.5px)
+  );
+}
+
+/*
+ * Rules every control follows. They are unlayered, so they win over daisyUI's and Tailwind's
+ * layered styles without fighting on specificity.
+ */
+
+/* One focus ring for every control, in the page's ink. daisyUI draws each button's ring in that
+   button's own color, which nearly vanishes on a pastel button against this paper. */
+:focus-visible {
+  outline: 3px solid var(--color-base-content);
+  outline-offset: 2px;
+}
+
+/* 44px is the smallest comfortable touch target; daisyUI's small buttons are 32px. */
+.btn {
+  min-height: 2.75rem;
+}
+
+/* A text field's edge is how it is found; daisyUI draws it at 20% ink. */
+.input {
+  --input-color: var(--color-edge);
+}

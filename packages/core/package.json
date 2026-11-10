@@ -1,0 +1,22 @@
+{
+  "name": "@loteria/core",
+  "version": "0.0.0",
+  "description": "Lotería rules: the deck, tabla dealing, claim verification, and the client/server protocol. Pure, deterministic, no I/O.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
+}

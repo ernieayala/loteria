@@ -1,0 +1,20 @@
+{
+  "name": "@loteria/web",
+  "version": "0.0.0",
+  "description": "The caller's screen and the players' tablas, in one page.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --build",
+    "build:app": "vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@loteria/core": "*"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "daisyui": "^5.7.16",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.2.1"
+  }
+}
