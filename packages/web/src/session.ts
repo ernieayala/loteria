@@ -1,7 +1,7 @@
 /**
- * The seat this browser holds, kept so a reload or a slept phone takes the same seat back.
+ * What this browser remembers between visits: the seat it holds, and the name it last joined with.
  *
- * Saved twice. sessionStorage belongs to one tab, so a caller and a player in two tabs of the same
+ * The seat is kept so a reload or a slept phone takes the same seat back. It is saved twice. sessionStorage belongs to one tab, so a caller and a player in two tabs of the same
  * browser each reload into their own seat. localStorage outlives the tab, so a phone whose browser
  * discarded the tab still finds its seat. Either store can be missing or throw on access (private
  * windows, blocked site data); then the seat lasts as long as the page and nothing else breaks.
@@ -40,4 +40,26 @@ export function saveSeat(seat: SeatMessage): void {
 
 export function clearSeat(): void {
   eachStore((store) => store.removeItem(KEY));
+}
+
+const NAME_KEY = 'loteria.name.v1';
+
+/**
+ * The name this browser last joined with, so the next join is one tap. Kept in localStorage only:
+ * it belongs to the person holding the phone, not to one tab's seat. Empty when there is none.
+ */
+export function loadName(): string {
+  try {
+    return localStorage.getItem(NAME_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveName(name: string): void {
+  try {
+    localStorage.setItem(NAME_KEY, name);
+  } catch {
+    // Storage is blocked; the name is typed again next time.
+  }
 }

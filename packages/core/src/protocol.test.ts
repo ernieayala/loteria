@@ -20,9 +20,16 @@ describe('ClientMessageSchema', () => {
     ['a fractional card', { t: 'mark', card: 1.5 }],
     ['a token that is not a uuid', { t: 'resume', code: 'ABCD', token: 'abc' }],
     ['a ruling on a player id that is not a uuid', { t: 'grant', player: 'p1' }],
+    ['an unknown rule', { t: 'rule', rule: 'corners' }],
+    ['a rule message with no rule', { t: 'rule' }],
     ['an unknown type', { t: 'cheat' }],
   ])('rejects %s', (_label, message) => {
     expect(ClientMessageSchema.safeParse(message).success).toBe(false);
+  });
+
+  it('accepts each win rule', () => {
+    expect(ClientMessageSchema.parse({ t: 'rule', rule: 'full' })).toEqual({ t: 'rule', rule: 'full' });
+    expect(ClientMessageSchema.parse({ t: 'rule', rule: 'line' })).toEqual({ t: 'rule', rule: 'line' });
   });
 
   it('accepts the caller ruling on a claim', () => {
@@ -35,13 +42,14 @@ describe('ClientMessageSchema', () => {
 describe('views', () => {
   const game: Game = {
     round: 1,
+    rule: 'line',
     deck: Array.from({ length: 54 }, (_, i) => i + 1),
     calledCount: 2,
     players: [
-      { id: 'p1', name: 'Ana', tabla: Array.from({ length: 16 }, (_, i) => i + 1), marked: [1] },
-      { id: 'p2', name: 'Beto', tabla: Array.from({ length: 16 }, (_, i) => i + 20), marked: [] },
+      { id: 'p1', name: 'Ana', tabla: Array.from({ length: 16 }, (_, i) => i + 1), marked: [1], wins: 0 },
+      { id: 'p2', name: 'Beto', tabla: Array.from({ length: 16 }, (_, i) => i + 20), marked: [], wins: 1 },
     ],
-    winner: null,
+    winners: [],
     claims: [],
     rejected: [],
   };
@@ -50,6 +58,9 @@ describe('views', () => {
     expect(hostView('ABCD', game, new Set(['p2']))).toEqual({
       code: 'ABCD',
       round: 1,
+      rule: 'line',
+      prize: 'line',
+      winners: [],
       called: [1, 2],
       remaining: 52,
       players: [
@@ -57,11 +68,10 @@ describe('views', () => {
         { id: 'p2', name: 'Beto', connected: true },
       ],
       claims: [],
-      winner: null,
     });
   });
 
-  it('shows the host each waiting claim with its tabla, beans, and the line behind it if any', () => {
+  it('shows the host each waiting claim with its tabla, beans, past wins, and the cells behind it if any', () => {
     // Ana has 1 and 2 called and marked, so no line; Beto's whole first row is called and marked.
     const claimed: Game = {
       ...game,
@@ -70,22 +80,33 @@ describe('views', () => {
       claims: ['p1', 'p2'],
     };
     expect(hostView('ABCD', claimed, new Set()).claims).toEqual([
-      { playerId: 'p1', name: 'Ana', tabla: game.players[0]?.tabla, marked: [1], line: null },
-      { playerId: 'p2', name: 'Beto', tabla: game.players[1]?.tabla, marked: [20, 21, 22, 23], line: [0, 1, 2, 3] },
+      { playerId: 'p1', name: 'Ana', tabla: game.players[0]?.tabla, marked: [1], wins: 0, cells: null },
+      {
+        playerId: 'p2',
+        name: 'Beto',
+        tabla: game.players[1]?.tabla,
+        marked: [20, 21, 22, 23],
+        wins: 1,
+        cells: [0, 1, 2, 3],
+      },
     ]);
+    // The same tabla is no win when the round is for a full tabla.
+    expect(hostView('ABCD', { ...claimed, rule: 'full' }, new Set()).claims[1]?.cells).toBeNull();
   });
 
-  it("gives a player their own tabla, beans and claim, never another player's or the calls", () => {
+  it("gives a player the prizes, their own tabla, beans and claim, never another player's or the calls", () => {
     const view = playerView('ABCD', game, 'p1');
     expect(view).toEqual({
       code: 'ABCD',
       round: 1,
+      rule: 'line',
+      prize: 'line',
+      winners: [],
       you: 'p1',
       name: 'Ana',
       tabla: game.players[0]?.tabla,
       marked: [1],
       claim: 'none',
-      winner: null,
     });
     expect(JSON.stringify(view)).not.toContain('"tabla":[20');
   });
@@ -96,18 +117,23 @@ describe('views', () => {
     expect(playerView('ABCD', { ...game, claims: ['p2'] }, 'p1').claim).toBe('none');
   });
 
-  it("shows everyone the winner's tabla and line", () => {
-    const won: Game = { ...game, winner: { playerId: 'p2', line: [0, 1, 2, 3] } };
-    expect(playerView('ABCD', won, 'p1').winner).toEqual({
-      playerId: 'p2',
-      name: 'Beto',
-      tabla: game.players[1]?.tabla,
-      line: [0, 1, 2, 3],
-    });
+  it("shows everyone each winner's tabla and winning cells, and the prize still in play", () => {
+    const lineWon: Game = {
+      ...game,
+      rule: 'line-then-full',
+      winners: [{ playerId: 'p2', prize: 'line', cells: [0, 1, 2, 3] }],
+    };
+    const view = playerView('ABCD', lineWon, 'p1');
+    expect(view.winners).toEqual([
+      { playerId: 'p2', name: 'Beto', prize: 'line', tabla: game.players[1]?.tabla, cells: [0, 1, 2, 3] },
+    ]);
+    expect(view.prize).toBe('full');
+    expect(playerView('ABCD', { ...lineWon, rule: 'line' }, 'p1').prize).toBeNull();
   });
 
   it('round-trips through the server message schema', () => {
-    const message = { t: 'player-view', view: playerView('ABCD', game, 'p1') };
+    const won: Game = { ...game, winners: [{ playerId: 'p2', prize: 'line', cells: [0, 1, 2, 3] }] };
+    const message = { t: 'player-view', view: playerView('ABCD', won, 'p1') };
     expect(ServerMessageSchema.parse(JSON.parse(JSON.stringify(message)))).toEqual(message);
   });
 });

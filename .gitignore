@@ -6,6 +6,9 @@ dist/
 build/
 *.tsbuildinfo
 
+# Full-resolution card art. The repo is public; only the web-size WebP made from it is committed.
+/cards/
+
 # Test / coverage
 coverage/
 .vitest/

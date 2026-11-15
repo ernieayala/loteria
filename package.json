@@ -16,7 +16,8 @@
     "test": "tsc --build && npm run test --workspaces --if-present",
     "typecheck": "tsc --build",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "card-art": "node scripts/card-art.js"
   },
   "engines": {
     "node": ">=22.12.0"

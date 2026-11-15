@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { pickLang } from './i18n.js';
+import { DECK } from '@loteria/core';
+import { cardMeaning, pickLang, STRINGS } from './i18n.js';
+
+describe('cardMeaning', () => {
+  it.each(Object.entries(STRINGS))('gives every card a meaning in %s, one per card', (_lang, t) => {
+    expect(t.cardMeanings).toHaveLength(DECK.length);
+    for (const { id } of DECK) expect(cardMeaning(t, id)).not.toBe('');
+  });
+
+  it('matches meanings to cards by number', () => {
+    expect(cardMeaning(STRINGS.en, 1)).toBe('Hummingbird');
+    expect(cardMeaning(STRINGS.es, 54)).toBe('Cuy');
+  });
+
+  it('throws for a card outside the deck', () => {
+    expect(() => cardMeaning(STRINGS.en, 55)).toThrow();
+  });
+});
 
 describe('pickLang', () => {
   it('keeps a saved choice over the browser preference', () => {

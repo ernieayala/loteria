@@ -3,12 +3,13 @@ import { WebSocket } from 'ws';
 import {
   LINES,
   ServerMessageSchema,
+  SOCKET_PATH,
   type ClientMessage,
   type HostView,
   type PlayerView,
   type ServerMessage,
 } from '@loteria/core';
-import { SOCKET_PATH, startServer, type RunningServer } from './server.js';
+import { startServer, type RunningServer } from './server.js';
 
 let server: RunningServer;
 
@@ -109,7 +110,7 @@ describe('hub', () => {
     expect(seat.role).toBe('host');
     expect(seat.code).toMatch(/^[A-Z]{4}$/);
     const view = (await host.next('host-view')).view;
-    expect(view).toMatchObject({ code: seat.code, called: [], remaining: 54, players: [], winner: null });
+    expect(view).toMatchObject({ code: seat.code, called: [], remaining: 54, players: [], winners: [], prize: 'line' });
     host.close();
   });
 
@@ -127,9 +128,20 @@ describe('hub', () => {
     await host.next('host-view', (m) => m.view.called.length === 1);
     host.send({ t: 'draw' });
     await host.next('host-view', (m) => m.view.called.length === 2);
-    player.send({ t: 'loteria' });
+    player.send({ t: 'claim' });
     const view = (await player.next('player-view', (m) => m.view.claim === 'pending')).view;
-    expect(Object.keys(view).sort()).toEqual(['claim', 'code', 'marked', 'name', 'round', 'tabla', 'winner', 'you']);
+    expect(Object.keys(view).sort()).toEqual([
+      'claim',
+      'code',
+      'marked',
+      'name',
+      'prize',
+      'round',
+      'rule',
+      'tabla',
+      'winners',
+      'you',
+    ]);
     host.close();
     player.close();
   });
@@ -138,20 +150,24 @@ describe('hub', () => {
     const { host, player, view } = await hostAndJoin();
     const row = firstRow(view);
 
+    // The caller plays this round for one line, and the player is told.
+    host.send({ t: 'rule', rule: 'line' });
+    await player.next('player-view', (m) => m.view.rule === 'line');
+
     // A bean goes on any card of the tabla, called or not.
     player.send({ t: 'mark', card: row[0]! });
     await player.next('player-view', (m) => m.view.marked.includes(row[0]!));
 
     // A claim with nothing behind it goes to the caller; the player hears no verdict.
-    player.send({ t: 'loteria' });
-    expect((await player.next('player-view', (m) => m.view.claim === 'pending')).view.winner).toBeNull();
+    player.send({ t: 'claim' });
+    expect((await player.next('player-view', (m) => m.view.claim === 'pending')).view.winners).toEqual([]);
     const claim = (await host.next('host-view', (m) => m.view.claims.length === 1)).view.claims[0]!;
-    expect(claim).toMatchObject({ name: 'Ana', marked: [row[0]], line: null });
+    expect(claim).toMatchObject({ name: 'Ana', marked: [row[0]], cells: null });
 
     host.send({ t: 'draw' });
     expect((await host.next('error')).code).toBe('claim-pending');
     host.send({ t: 'grant', player: claim.playerId });
-    expect((await host.next('error')).code).toBe('no-line');
+    expect((await host.next('error')).code).toBe('no-win');
     host.send({ t: 'reject', player: claim.playerId });
     await player.next('player-view', (m) => m.view.claim === 'rejected');
 
@@ -160,12 +176,16 @@ describe('hub', () => {
       player.send({ t: 'mark', card: id });
       await player.next('player-view', (m) => m.view.marked.includes(id));
     }
-    player.send({ t: 'loteria' });
-    const backed = (await host.next('host-view', (m) => m.view.claims[0]?.line != null)).view.claims[0]!;
-    expect(backed.line).toEqual([0, 1, 2, 3]);
+    player.send({ t: 'claim' });
+    const backed = (await host.next('host-view', (m) => m.view.claims[0]?.cells != null)).view.claims[0]!;
+    expect(backed.cells).toEqual([0, 1, 2, 3]);
     host.send({ t: 'grant', player: backed.playerId });
-    const won = (await player.next('player-view', (m) => m.view.winner !== null)).view;
-    expect(won).toMatchObject({ claim: 'none', winner: { name: 'Ana', line: [0, 1, 2, 3], tabla: view.tabla } });
+    const won = (await player.next('player-view', (m) => m.view.winners.length === 1)).view;
+    expect(won).toMatchObject({
+      claim: 'none',
+      prize: null,
+      winners: [{ name: 'Ana', prize: 'line', cells: [0, 1, 2, 3], tabla: view.tabla }],
+    });
 
     host.send({ t: 'draw' });
     expect((await host.next('error')).code).toBe('game-over');
@@ -174,7 +194,20 @@ describe('hub', () => {
 
     host.send({ t: 'new-round' });
     const fresh = (await player.next('player-view', (m) => m.view.round === 2)).view;
-    expect(fresh).toMatchObject({ marked: [], claim: 'none', winner: null });
+    expect(fresh).toMatchObject({ rule: 'line', prize: 'line', marked: [], claim: 'none', winners: [] });
+    host.close();
+    player.close();
+  });
+
+  it('lets the caller pick the rule only before the first card', async () => {
+    const { host, player } = await hostAndJoin();
+    expect((await host.next('host-view', (m) => m.view.rule === 'line-then-full')).view.called).toEqual([]);
+    host.send({ t: 'rule', rule: 'line' });
+    await host.next('host-view', (m) => m.view.rule === 'line');
+    host.send({ t: 'draw' });
+    await host.next('host-view', (m) => m.view.called.length === 1);
+    host.send({ t: 'rule', rule: 'full' });
+    expect((await host.next('error')).code).toBe('round-started');
     host.close();
     player.close();
   });
@@ -199,7 +232,7 @@ describe('hub', () => {
 
   it('keeps a waiting claim, and its ruling, across both sides reconnecting', async () => {
     const { host, player, code, hostToken, playerToken } = await hostAndJoin();
-    player.send({ t: 'loteria' });
+    player.send({ t: 'claim' });
     await player.next('player-view', (m) => m.view.claim === 'pending');
     const { playerId } = (await host.next('host-view', (m) => m.view.claims.length === 1)).view.claims[0]!;
 
@@ -234,7 +267,9 @@ describe('hub', () => {
     expect((await player.next('error')).code).toBe('not-host');
     player.send({ t: 'grant', player: '00000000-0000-4000-8000-000000000001' });
     expect((await player.next('error')).code).toBe('not-host');
-    host.send({ t: 'loteria' });
+    player.send({ t: 'rule', rule: 'line' });
+    expect((await player.next('error')).code).toBe('not-host');
+    host.send({ t: 'claim' });
     expect((await host.next('error')).code).toBe('not-player');
     host.close();
     player.close();

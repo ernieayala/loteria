@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto';
 import { WebSocket, type WebSocketServer } from 'ws';
 import {
   addPlayer,
-  claimLoteria,
+  claimWin,
   ClientMessageSchema,
   drawCard,
   grantClaim,
@@ -18,6 +18,7 @@ import {
   newRound,
   playerView,
   rejectClaim,
+  setRule,
   toggleMark,
   type ClientMessage,
   type ErrorCode,
@@ -106,6 +107,9 @@ export function attachHub(wss: WebSocketServer, registry = new RoomRegistry()): 
         if (!room || !seat) return sendError(ws, 'not-seated');
         room.lastActive = Date.now();
         switch (message.t) {
+          case 'rule':
+            if (seat.role !== 'host') return sendError(ws, 'not-host');
+            return apply(ws, room, setRule(room.game, message.rule));
           case 'draw':
             if (seat.role !== 'host') return sendError(ws, 'not-host');
             return apply(ws, room, drawCard(room.game));
@@ -122,9 +126,9 @@ export function attachHub(wss: WebSocketServer, registry = new RoomRegistry()): 
           case 'mark':
             if (seat.role !== 'player') return sendError(ws, 'not-player');
             return apply(ws, room, toggleMark(room.game, seat.playerId, message.card));
-          case 'loteria':
+          case 'claim':
             if (seat.role !== 'player') return sendError(ws, 'not-player');
-            return apply(ws, room, claimLoteria(room.game, seat.playerId));
+            return apply(ws, room, claimWin(room.game, seat.playerId));
         }
       }
     }

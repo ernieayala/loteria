@@ -4,11 +4,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import type { ViteDevServer } from 'vite';
+import { SOCKET_PATH } from '@loteria/core';
 import { attachHub } from './hub.js';
 import { staticHandler } from './static.js';
 
 const WEB_ROOT = fileURLToPath(new URL('../../web/', import.meta.url));
-export const SOCKET_PATH = '/ws';
 const MAX_MESSAGE_BYTES = 4 * 1024;
 
 export interface ServerOptions {

@@ -6,7 +6,15 @@
  */
 
 import './styles.css';
-import { ROOM_CODE_LENGTH, type CardId, type HostView, type PlayerView, type ServerMessage } from '@loteria/core';
+import {
+  ROOM_CODE_LENGTH,
+  WIN_RULES,
+  type CardId,
+  type HostView,
+  type PlayerView,
+  type ServerMessage,
+  type WinRule,
+} from '@loteria/core';
 import { isLang, loadLang, pickLang, saveLang, STRINGS, type Lang } from './i18n.js';
 import {
   BEAN_ROLL_MS,
@@ -17,19 +25,24 @@ import {
   noticeHtml,
   playerAnnouncement,
   playerHtml,
+  joinHtml,
   waitingHtml,
-  type HomeForm,
+  type JoinForm,
 } from './render.js';
-import { clearSeat, loadSeat, saveSeat } from './session.js';
+import { clearSeat, loadName, loadSeat, saveName, saveSeat } from './session.js';
 import { openSocket } from './socket.js';
 
 type Screen =
   | { readonly kind: 'home' }
+  | { readonly kind: 'join' }
   | { readonly kind: 'waiting' }
   | { readonly kind: 'host'; readonly view: HostView }
   | { readonly kind: 'player'; readonly view: PlayerView };
 
 const NOTICE_MS = 2600;
+
+/** A `data-rule` read back from the page is DOM data, so it is checked before it is sent. */
+const isWinRule = (value: unknown): value is WinRule => WIN_RULES.includes(value as WinRule);
 
 const joinParam =
   new URLSearchParams(location.search).get('join')?.trim().toUpperCase().slice(0, ROOM_CODE_LENGTH) ?? '';
@@ -40,11 +53,12 @@ const joinParam =
 const remembered = loadSeat();
 if (joinParam && !(remembered?.role === 'player' && remembered.code === joinParam)) clearSeat();
 
-let screen: Screen = loadSeat() ? { kind: 'waiting' } : { kind: 'home' };
+// An invite link or a scanned QR code goes straight to the join form, which then asks only for a name.
+let screen: Screen = loadSeat() ? { kind: 'waiting' } : joinParam ? { kind: 'join' } : { kind: 'home' };
 let lang: Lang = pickLang(loadLang(), navigator.languages);
 let online = false;
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
-let form: HomeForm = { code: joinParam, name: '' };
+let form: JoinForm = { code: joinParam, name: loadName(), codeGiven: joinParam.length === ROOM_CODE_LENGTH };
 /**
  * When each bean was put down, for beans that may still be rolling. Every render plays a roll from
  * how far it has got, so a render in the middle of a roll (another bean, a language switch) carries
@@ -96,12 +110,14 @@ function render(): void {
 
   app.innerHTML =
     screen.kind === 'home'
-      ? homeHtml(form, online, lang)
-      : screen.kind === 'waiting'
-        ? waitingHtml(online, lang)
-        : screen.kind === 'host'
-          ? hostHtml(screen.view, online, lang)
-          : playerHtml(screen.view, online, lang, rollingBeans());
+      ? homeHtml(online, lang)
+      : screen.kind === 'join'
+        ? joinHtml(form, online, lang)
+        : screen.kind === 'waiting'
+          ? waitingHtml(online, lang)
+          : screen.kind === 'host'
+            ? hostHtml(screen.view, online, lang, location.origin)
+            : playerHtml(screen.view, online, lang, rollingBeans());
   // The page language tells screen readers which voice to read with.
   document.documentElement.lang = lang;
   document.title = STRINGS[lang].title(screen.kind === 'host' || screen.kind === 'player' ? screen.view.code : null);
@@ -109,6 +125,21 @@ function render(): void {
   const restored = selector ? app.querySelector<HTMLElement>(selector) : null;
   restored?.focus();
   if (selection && restored instanceof HTMLInputElement) restored.setSelectionRange(selection[0], selection[1]);
+}
+
+/**
+ * Put the cursor in the first join field still to fill, so the phone's keyboard comes up ready.
+ * With every field filled (a link and a remembered name), nothing takes focus, so the keyboard stays
+ * down and Join is in plain view: one tap.
+ */
+function focusFirstEmpty(): void {
+  [...app.querySelectorAll<HTMLInputElement>('form input')].find((input) => !input.value)?.focus();
+}
+
+function showJoin(): void {
+  screen = { kind: 'join' };
+  render();
+  focusFirstEmpty();
 }
 
 function announce(text: string): void {
@@ -127,7 +158,7 @@ function onMessage(message: ServerMessage): void {
   switch (message.t) {
     case 'seat':
       saveSeat(message);
-      if (screen.kind === 'home') screen = { kind: 'waiting' };
+      if (screen.kind === 'home' || screen.kind === 'join') screen = { kind: 'waiting' };
       break;
     case 'host-view': {
       const prev = screen.kind === 'host' ? screen.view : null;
@@ -156,6 +187,11 @@ function onMessage(message: ServerMessage): void {
         screen = { kind: 'home' };
         render();
       }
+      // A link to a room that is gone: show the code field, so the right code can be typed.
+      if (message.code === 'room-not-found' && form.codeGiven) {
+        form = { ...form, codeGiven: false };
+        showJoin();
+      }
       return flash(STRINGS[lang].errors[message.code]);
   }
   render();
@@ -163,11 +199,11 @@ function onMessage(message: ServerMessage): void {
 
 /** Offer the join link through the phone's share sheet, or copy it where there is none. */
 async function invite(code: string): Promise<void> {
-  const url = joinLink(code);
+  const url = joinLink(location.origin, code);
   const t = STRINGS[lang];
   if ('share' in navigator) {
     try {
-      await navigator.share({ title: 'Lotería', text: t.inviteText(code), url });
+      await navigator.share({ title: t.title(null), text: t.inviteText(code), url });
       return;
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -190,8 +226,8 @@ const socket = openSocket({
     render();
   },
   onClose() {
-    // Leaving a game also drops the socket, but from the home screen there is nothing to lose.
-    if (online && screen.kind !== 'home') announce(STRINGS[lang].connectionLost);
+    // Leaving a game also drops the socket, but before a game there is nothing to lose.
+    if (online && screen.kind !== 'home' && screen.kind !== 'join') announce(STRINGS[lang].connectionLost);
     online = false;
     render();
   },
@@ -205,6 +241,15 @@ app.addEventListener('click', (event) => {
     case 'host':
       socket.send({ t: 'host' });
       break;
+    case 'to-join':
+      // Chosen from the home screen, so the code may be any room's: show its field, filled if a link gave one.
+      form = { ...form, codeGiven: false };
+      showJoin();
+      break;
+    case 'home':
+      screen = { kind: 'home' };
+      render();
+      break;
     case 'lang':
       if (!isLang(target.dataset.lang)) return;
       lang = target.dataset.lang;
@@ -214,14 +259,19 @@ app.addEventListener('click', (event) => {
     case 'share':
       if (screen.kind === 'host') void invite(screen.view.code);
       break;
+    case 'rule': {
+      const rule = target.dataset.rule;
+      if (isWinRule(rule)) socket.send({ t: 'rule', rule });
+      break;
+    }
     case 'draw':
       socket.send({ t: 'draw' });
       break;
     case 'new-round':
       socket.send({ t: 'new-round' });
       break;
-    case 'loteria':
-      socket.send({ t: 'loteria' });
+    case 'claim':
+      socket.send({ t: 'claim' });
       break;
     case 'mark':
       socket.send({ t: 'mark', card: Number(target.dataset.card) });
@@ -254,7 +304,9 @@ app.addEventListener('input', (event) => {
 
 app.addEventListener('submit', (event) => {
   event.preventDefault();
+  saveName(form.name.trim());
   socket.send({ t: 'join', code: form.code, name: form.name });
 });
 
 render();
+if (screen.kind === 'join') focusFirstEmpty();

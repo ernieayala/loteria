@@ -6,7 +6,7 @@
  * sends `resume` on every open and the server answers with the whole current view.
  */
 
-import { ServerMessageSchema, type ClientMessage, type ServerMessage } from '@loteria/core';
+import { ServerMessageSchema, SOCKET_PATH, type ClientMessage, type ServerMessage } from '@loteria/core';
 
 export interface SocketHandlers {
   onOpen(): void;
@@ -24,7 +24,7 @@ export interface GameSocket {
 const MAX_BACKOFF_MS = 8000;
 
 export function openSocket(handlers: SocketHandlers): GameSocket {
-  const url = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+  const url = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${SOCKET_PATH}`;
   let ws: WebSocket;
   let attempt = 0;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;

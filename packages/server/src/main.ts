@@ -20,7 +20,7 @@ const lanUrls = Object.values(networkInterfaces())
   .flat()
   .filter((a): a is NetworkInterfaceInfo => a !== undefined && a.family === 'IPv4' && !a.internal)
   .map((a) => `http://${a.address}:${server.port}`);
-console.log(`Lotería ${dev ? 'dev server' : 'server'} on http://localhost:${server.port}`);
+console.log(`Achik Pukllay ${dev ? 'dev server' : 'server'} on http://localhost:${server.port}`);
 for (const url of lanUrls) console.log(`  Phones on the same Wi-Fi: ${url}`);
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
