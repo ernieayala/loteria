@@ -17,10 +17,10 @@ The list has `tabindex="0"` so a keyboard can reach and scroll it, and `aria-lab
 - Don't: `flex-wrap`.
 - Check: review.
 
-**It gives way to a tabla.** While a winner's tabla or a claim is on screen, the row is not rendered (`render.ts:596-599`): the tabla needs the room more than the history does.
+**It gives way to a tabla.** While a winner's tabla or a claim is on screen, the row is not rendered (`render.ts:606-609`): the tabla needs the room more than the history does.
 
 - Check: review.
 
-**The current card is not in it.** `hostHtml` splits `[current, ...earlier]` from the reversed calls (`render.ts:550`).
+**The current card is not in it.** `hostHtml` splits `[current, ...earlier]` from the reversed calls (`render.ts:571`).
 
 - Check: review.

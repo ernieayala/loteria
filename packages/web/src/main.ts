@@ -65,6 +65,8 @@ let form: JoinForm = { code: joinParam, name: loadName(), codeGiven: joinParam.l
  * it on instead of restarting it or cutting it short.
  */
 const thrownAt = new Map<CardId, number>();
+/** The player's Last card toggle. Off for each new round and each new seat, so it never opens by itself. */
+let peeking = false;
 
 /** The beans still rolling, with the ms of their roll already played. Finished ones are forgotten. */
 function rollingBeans(): ReadonlyMap<CardId, number> {
@@ -79,7 +81,7 @@ function rollingBeans(): ReadonlyMap<CardId, number> {
 
 /**
  * The server sends every seat a fresh view on every change in the room, and most changes do not
- * touch a given seat: a player's view is the same before and after the caller draws. Re-rendering
+ * touch a given seat: a player's view is the same before and after another player's bean. Re-rendering
  * an unchanged view would only rebuild the page under the player's finger.
  */
 const unchanged = (prev: unknown, next: unknown): boolean =>
@@ -117,7 +119,7 @@ function render(): void {
           ? waitingHtml(online, lang)
           : screen.kind === 'host'
             ? hostHtml(screen.view, online, lang, location.origin)
-            : playerHtml(screen.view, online, lang, rollingBeans());
+            : playerHtml(screen.view, online, lang, rollingBeans(), peeking);
   // The page language tells screen readers which voice to read with.
   document.documentElement.lang = lang;
   document.title = STRINGS[lang].title(screen.kind === 'host' || screen.kind === 'player' ? screen.view.code : null);
@@ -177,8 +179,9 @@ function onMessage(message: ServerMessage): void {
         // The first view after joining or reconnecting: its beans were already down.
         thrownAt.clear();
       }
+      if (prev?.round !== message.view.round) peeking = false;
       screen = { kind: 'player', view: message.view };
-      announce(playerAnnouncement(prev, message.view, STRINGS[lang]));
+      announce(playerAnnouncement(prev, message.view, STRINGS[lang], peeking));
       break;
     }
     case 'error':
@@ -275,6 +278,10 @@ app.addEventListener('click', (event) => {
       break;
     case 'mark':
       socket.send({ t: 'mark', card: Number(target.dataset.card) });
+      break;
+    case 'peek':
+      peeking = !peeking;
+      render();
       break;
     case 'grant':
       if (target.dataset.player) socket.send({ t: 'grant', player: target.dataset.player });

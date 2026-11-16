@@ -22,7 +22,7 @@ Check: review.
 
 ### `it` names one behavior, starting with a verb
 
-Present tense, reading after "it": "refuses a card that is not on the tabla", "never sends a player the calls". A name says what the code does, in the game's words, not how the test checks it.
+Present tense, reading after "it": "refuses a card that is not on the tabla", "sends a player the latest call only". A name says what the code does, in the game's words, not how the test checks it.
 
 - Non-conforming: `it('works')`, `it('test toggleMark error')`.
 

@@ -4,7 +4,7 @@ The two fields on the join form: room code and name. daisyUI `input input-lg w-f
 
 ## Anatomy
 
-A `text-sm font-medium` `<label for>` above the field, `gap-1`, in a `flex flex-col` (`render.ts:496-508`).
+A `text-sm font-medium` `<label for>` above the field, `gap-1`, in a `flex flex-col` (`render.ts:517-529`).
 
 ## Fields
 
@@ -20,7 +20,7 @@ A `text-sm font-medium` `<label for>` above the field, `gap-1`, in a `flex flex-
 - Don't: `maxlength="20"` written out.
 - Check: review.
 
-**The field keeps its value and caret across renders.** `main.ts` keeps the typed values in `form` (`main.ts:298-303`) and restores focus and selection after each render.
+**The field keeps its value and caret across renders.** `main.ts` keeps the typed values in `form` (`main.ts:305-310`) and restores focus and selection after each render.
 
 - Check: review.
 

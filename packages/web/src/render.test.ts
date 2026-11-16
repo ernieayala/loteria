@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DECK_SIZE, type HostView, type PlayerView, type WinnerView } from '@loteria/core';
-import { beanSpot, homeHtml, hostHtml, joinHtml, playerHtml } from './render.js';
+import { STRINGS } from './i18n.js';
+import { beanSpot, homeHtml, hostHtml, joinHtml, playerAnnouncement, playerHtml } from './render.js';
 
 const parse = (style: string): Record<string, number> =>
   Object.fromEntries(
@@ -72,35 +73,78 @@ describe('playerHtml', () => {
     tabla: TABLA,
     marked: [],
     claim: 'none',
+    last: null,
   };
+  /** The Last card toggle in the markup, or undefined when there is none. */
+  const lastCardToggle = (html: string): string | undefined => /<button [^>]*data-action="peek"[^>]*>/.exec(html)?.[0];
 
   it('lets a player mark their tabla while online', () => {
-    expect(cellButtons(playerHtml(view, true, 'en', new Map()))).toEqual({ enabled: 16, disabled: 0 });
+    expect(cellButtons(playerHtml(view, true, 'en', new Map(), false))).toEqual({ enabled: 16, disabled: 0 });
   });
 
   it('locks the tabla while offline, so a mark is never dropped unsent', () => {
-    expect(cellButtons(playerHtml(view, false, 'en', new Map()))).toEqual({ enabled: 0, disabled: 16 });
+    expect(cellButtons(playerHtml(view, false, 'en', new Map(), false))).toEqual({ enabled: 0, disabled: 16 });
   });
 
   it('locks the tabla while a claim waits for the caller', () => {
-    expect(cellButtons(playerHtml({ ...view, claim: 'pending' }, true, 'en', new Map()))).toEqual({
+    expect(cellButtons(playerHtml({ ...view, claim: 'pending' }, true, 'en', new Map(), false))).toEqual({
       enabled: 0,
       disabled: 16,
     });
   });
 
   it('draws every cell with its card art and Kichwa name, and tells the player the rule', () => {
-    const html = playerHtml(view, true, 'en', new Map());
+    const html = playerHtml(view, true, 'en', new Map(), false);
     expect(html.match(/<img [^>]*srcset="[^"]*320w[^"]*720w"/g)).toHaveLength(16);
     expect(html).toContain('aria-label="Kinti"');
     expect(html).toContain('Round 1 · Full tabla only');
   });
 
+  it('offers the last card only once one is called and the round plays', () => {
+    expect(lastCardToggle(playerHtml(view, true, 'en', new Map(), false))).toMatch(/\sdisabled/);
+    expect(lastCardToggle(playerHtml({ ...view, last: 1 }, true, 'en', new Map(), false))).not.toMatch(/\sdisabled/);
+    // Once the round is over the winner's tabla holds the screen, and the bottom row goes with the shout.
+    const over = { ...view, last: 1, prize: null, winners: [lineWinner] };
+    expect(lastCardToggle(playerHtml(over, true, 'en', new Map(), true))).toBeUndefined();
+  });
+
+  it('puts Last card beside the shout, not in the header, and keeps it while a claim waits', () => {
+    const html = playerHtml({ ...view, last: 1 }, true, 'en', new Map(), false);
+    expect(html).toMatch(/<\/header>[\s\S]*data-action="peek"[\s\S]*data-action="claim"/);
+    const pending = playerHtml({ ...view, last: 1, claim: 'pending' }, true, 'en', new Map(), false);
+    expect(lastCardToggle(pending)).not.toMatch(/\sdisabled/);
+    expect(pending).toContain('Sent to the Kawak…');
+  });
+
+  it('shows the last card with its meaning in place of the tabla while the toggle is on', () => {
+    const closed = playerHtml({ ...view, last: 1 }, true, 'es', new Map(), false);
+    expect(lastCardToggle(closed)).toContain('aria-pressed="false"');
+    expect(closed).not.toContain('alt="1, Kinti"');
+    const open = playerHtml({ ...view, last: 1 }, true, 'es', new Map(), true);
+    expect(lastCardToggle(open)).toContain('aria-pressed="true"');
+    expect(open).toContain('<section aria-label="Última carta" data-action="peek"');
+    expect(open).toContain('alt="1, Kinti"');
+    expect(open).toContain('<figcaption class="text-center text-2xl font-bold">Colibrí</figcaption>');
+    expect(cellButtons(open)).toEqual({ enabled: 0, disabled: 0 });
+    // The shout stays where the thumb is.
+    expect(open).toContain('data-action="claim"');
+  });
+
+  it('says a new call only to a player whose Last card toggle shows it', () => {
+    const before = { ...view, last: 1 };
+    const after = { ...view, last: 2 };
+    expect(playerAnnouncement(before, after, STRINGS.en, false)).toBe('');
+    expect(playerAnnouncement(before, after, STRINGS.en, true)).toBe('Card 2, Yanuk: Cook.');
+    expect(playerAnnouncement(after, { ...after, marked: [3] }, STRINGS.en, true)).toBe('');
+  });
+
   it('tells everyone still playing who got the line and what is in play now', () => {
     const playing = { ...view, rule: 'line-then-full', prize: 'full', winners: [lineWinner] } as const;
-    expect(playerHtml(playing, true, 'en', new Map())).toContain('Beto got the line. Keep going for a full tabla.');
+    expect(playerHtml(playing, true, 'en', new Map(), false)).toContain(
+      'Beto got the line. Keep going for a full tabla.',
+    );
     // The line winner reads it about themselves, and keeps their tabla to play for the full one.
-    const mine = playerHtml({ ...playing, you: 'p2' }, true, 'en', new Map());
+    const mine = playerHtml({ ...playing, you: 'p2' }, true, 'en', new Map(), false);
     expect(mine).toContain('You got the line. Keep going for a full tabla.');
     expect(cellButtons(mine).enabled).toBe(16);
   });
@@ -113,7 +157,7 @@ describe('playerHtml', () => {
       prize: 'full',
       cells: [...TABLA.keys()],
     };
-    const html = playerHtml({ ...view, prize: null, winners: [lineWinner, fullWinner] }, true, 'en', new Map());
+    const html = playerHtml({ ...view, prize: null, winners: [lineWinner, fullWinner] }, true, 'en', new Map(), false);
     expect(html).toContain('ACHIK PUKLLAY!</span> You filled the tabla');
     expect(html).toContain('Beto got the line');
     expect(cellButtons(html)).toEqual({ enabled: 0, disabled: 0 });
@@ -140,14 +184,15 @@ describe('hostHtml', () => {
       /aria-pressed="(\w+)"/.exec(tag)![1]!,
     ]);
 
-  it('shows the join link as a QR code before the first card, and as text after', () => {
+  it('shows the join link as a QR code before the first card, and leaves it to Invite after', () => {
     const lobby = hostHtml(view, true, 'en', 'https://example.test');
     expect(lobby).toContain('aria-label="Scan to join: A B C D"');
     expect(lobby).toMatch(/<svg [^>]*viewBox/);
     expect(lobby).not.toContain('https://example.test/?join=ABCD');
     const playing = hostHtml({ ...view, called: [1] }, true, 'en', 'https://example.test');
     expect(playing).not.toContain('<svg');
-    expect(playing).toContain('https://example.test/?join=ABCD');
+    expect(playing).not.toContain('https://example.test/?join=ABCD');
+    expect(playing).toContain('data-action="share"');
   });
 
   it('offers the rule before the first card, with the current one pressed', () => {

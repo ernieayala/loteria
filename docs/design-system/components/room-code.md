@@ -1,6 +1,6 @@
 # Room code
 
-Four letters that seat a phone in a room. Shown large on the caller's screen and small in a player's header, and typed in the join form.
+Four letters that seat a phone in a room. Shown in the caller's header and small in a player's header, and typed in the join form.
 
 ## Function
 
@@ -8,11 +8,11 @@ Four letters that seat a phone in a room. Shown large on the caller's screen and
 
 ## Looks
 
-| Where               | Classes                                                                                                                                                                                         |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The caller's header | `font-mono text-4xl leading-tight font-black tracking-[0.2em]`, with the join link under it in `text-xs break-all` once the first card is out; before that the lobby's QR code carries the link |
-| A player's header   | `font-mono font-bold` inside "Room ABCD · Round 2"                                                                                                                                              |
-| The join field      | `font-mono tracking-[0.3em] uppercase`, see [text field](text-field.md)                                                                                                                         |
+| Where               | Classes                                                                                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The caller's header | `font-mono text-2xl leading-tight font-black tracking-[0.15em]` under a `text-xs` "Room code" label, sized so the header stays one row. The join link is not printed: the lobby's QR code and Invite carry it |
+| A player's header   | `font-mono font-bold` inside "Room ABCD · Round 2"                                                                                                                                                            |
+| The join field      | `font-mono tracking-[0.3em] uppercase`, see [text field](text-field.md)                                                                                                                                       |
 
 ## Rules
 

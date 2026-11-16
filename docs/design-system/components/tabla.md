@@ -14,7 +14,7 @@ A 4x4 board of cards that fills its parent's height. On a player's own phone eac
 
 ## Function
 
-`tablaHtml(tabla, opts)` (`packages/web/src/render.ts:283-309`).
+`tablaHtml(tabla, opts)` (`packages/web/src/render.ts:296-322`).
 
 | Option        | Meaning                                                                          |
 | ------------- | -------------------------------------------------------------------------------- |
@@ -68,7 +68,7 @@ The number and the bean are `aria-hidden`; the `<img>` has `alt=""`.
 
 - Check: review.
 
-**The grid comes from `TABLA_SIDE`.** Columns and rows are an inline `style` built from the core constant (`render.ts:308`), the one inline style besides custom properties.
+**The grid comes from `TABLA_SIDE`.** Columns and rows are an inline `style` built from the core constant (`render.ts:321`), the one inline style besides custom properties.
 
 - Don't: `grid-cols-4`, which would disagree with core if the side changed.
 - Check: review.

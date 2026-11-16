@@ -4,7 +4,7 @@ The switch to the other language, in every screen's header.
 
 ## Function
 
-`langSwitchHtml(lang)` (`packages/web/src/render.ts:91-99`): a `ghost` `compact` button with `action: 'lang'`, `data-lang` set to the other language, and `lang` on the button.
+`langSwitchHtml(lang)` (`packages/web/src/render.ts:93-101`): a `ghost` `compact` button with `action: 'lang'`, `data-lang` set to the other language, and `lang` on the button.
 
 ## Rules
 

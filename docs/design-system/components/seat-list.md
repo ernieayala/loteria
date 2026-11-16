@@ -4,7 +4,7 @@ The players in the caller's room, each as a badge with a connection dot.
 
 ## Function
 
-`seatsHtml(players, t)` (`packages/web/src/render.ts:313-321`): a wrapping `<ul>` of daisyUI badges, `gap-1.5`, under the "Players (n)" heading.
+`seatsHtml(players, t)` (`packages/web/src/render.ts:330-338`): a `<ul>` of daisyUI badges, `gap-1.5`, in one row that scrolls sideways, under the "Players (n)" heading. Each badge is `shrink-0 whitespace-nowrap`. The list takes focus (`tabindex="0"`, labelled by the heading) so a keyboard can scroll it.
 
 ## States
 
@@ -24,6 +24,6 @@ The players in the caller's room, each as a badge with a connection dot.
 
 - Check: review.
 
-**The list wraps.** Unlike the [called row](called-row.md), seats are read at a glance and wrap onto as many lines as they need.
+**The list is one row.** Like the [called row](called-row.md), it scrolls sideways, so ten players take no more height than one and the card or tabla below keeps its room on a short phone.
 
 - Check: review.

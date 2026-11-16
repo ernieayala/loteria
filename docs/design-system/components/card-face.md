@@ -1,6 +1,6 @@
 # Card face
 
-One called card standing alone: the caller's current card. Earlier calls are thumbnails in the [called row](called-row.md).
+One called card standing alone: the caller's current card, and the last call on a player's phone while Last card is on. Earlier calls are thumbnails in the [called row](called-row.md), on the caller's screen only.
 
 ## Anatomy
 
@@ -17,7 +17,7 @@ One called card standing alone: the caller's current card. Earlier calls are thu
 
 `currentCardHtml(id, t)` (`packages/web/src/render.ts`): a `<figure>` with two grid rows, the art (`minmax(0,1fr)`) and the meaning (`auto`).
 
-The figure is a size container (`[container-type:size]`), so it has no size of its own and takes the slot the screen leaves: `hostHtml` puts it in a grid track that fills the flexible area. Without containment the art's own pixels would set the slot's height and push Next card off the screen.
+The figure is a size container (`[container-type:size]`), so it has no size of its own and takes the slot the screen leaves: `cardSectionHtml(id, label, t, attrs?)` puts it in a labelled grid track that fills the flexible area, for `hostHtml` and `playerHtml` alike. Without containment the art's own pixels would set the slot's height and push the main action off the screen.
 
 ## Screen reader
 

@@ -6,7 +6,7 @@ Color comes from daisyUI's `retro` theme (`packages/web/src/styles.css:4-6`): wa
 
 ### Markup reads theme roles, never raw colors
 
-- Conforming: `border-edge bg-base-100` on a tabla cell (`render.ts:294-299`).
+- Conforming: `border-edge bg-base-100` on a tabla cell (`render.ts:307-312`).
 - Non-conforming: `bg-[#ece3ca]` or `style="color: …"` in a render function.
 
 The QR code is drawn black on white (`bg-white text-black`, `qrHtml`) rather than in the theme: it is read by cameras, and black on white is what every one reads best.
@@ -32,7 +32,7 @@ Check: review. The ratios below were computed from the theme values; no test rec
 
 `--color-edge` is base-content at 70% over its ground (`styles.css:33`). It outlines tabla cells, text fields (`styles.css:216-218`), and the claim-sent box, and clears 3:1 on both paper grounds (WCAG 2.2, 1.4.11). The card art draws its own dark frame, so the caller's card and the called-row thumbnails carry no outline.
 
-- Conforming: `border-2 border-edge` on a tabla cell (`render.ts:294-299`).
+- Conforming: `border-2 border-edge` on a tabla cell (`render.ts:307-312`).
 - Non-conforming: `border-base-300` on a cell: 1.27:1 against base-100, invisible to many players.
 
 Check: review.
@@ -41,14 +41,14 @@ Check: review.
 
 Text needs 4.5:1, or 3:1 when large (24px, or 18.66px bold). Borders, rings, and focus outlines that carry meaning need 3:1.
 
-- Conforming: `btn-error` is used only at the `action` size (`render.ts:611`), whose label is 20px bold, so its 3.34:1 passes as large text.
+- Conforming: `btn-error` is used only at the `action` size (`render.ts:633`), whose label is 20px bold, so its 3.34:1 passes as large text.
 - Non-conforming: `btn-error` at `block` or `compact` size: 3.34:1 on normal text fails.
 
 Check: review.
 
 ### Color never carries meaning alone
 
-- Conforming: a winning cell has a green border and a 4px ring, a shape change as well as a color (`render.ts:296`); the chosen rule toggle is filled where the other is only outlined, and says so with `aria-pressed`; a seat offline is a borderless ghost badge where an online seat is outlined, and says ", offline" to a screen reader (`render.ts:317-318`).
+- Conforming: a winning cell has a green border and a 4px ring, a shape change as well as a color (`render.ts:309`); the chosen rule toggle is filled where the other is only outlined, and says so with `aria-pressed`; a seat offline is a borderless ghost badge where an online seat is outlined, and says ", offline" to a screen reader (`render.ts:334-335`).
 - Non-conforming: a cell that only turns green.
 
 Check: review.

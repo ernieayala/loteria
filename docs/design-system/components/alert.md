@@ -4,8 +4,8 @@ daisyUI `alert`, in two uses.
 
 | Use                 | Function                                             | Classes                            | Shown                                                         |
 | ------------------- | ---------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| Reconnecting banner | `offlineBannerHtml(online, t)` (`render.ts:398-399`) | `alert alert-warning py-2 text-sm` | First row of every screen while the socket is down            |
-| Notice              | `noticeHtml(notice)` (`render.ts:651-653`)           | `alert alert-info shadow-lg`       | In the `#notice` toast for `NOTICE_MS` (2600ms, `main.ts:42`) |
+| Reconnecting banner | `offlineBannerHtml(online, t)` (`render.ts:415-416`) | `alert alert-warning py-2 text-sm` | First row of every screen while the socket is down            |
+| Notice              | `noticeHtml(notice)` (`render.ts:688-690`)           | `alert alert-info shadow-lg`       | In the `#notice` toast for `NOTICE_MS` (2600ms, `main.ts:42`) |
 
 Both colors are the darkened theme roles ([color](../foundations/color.md#a-theme-color-that-fails-aa-is-darkened-in-the-theme-never-patched-per-use)).
 
@@ -19,6 +19,6 @@ The banner is plain text in the page. The notice renders into `#notice`, which s
 
 - Check: review.
 
-**A new notice replaces the old one** and restarts its timer (`flash`, `main.ts:149-155`).
+**A new notice replaces the old one** and restarts its timer (`flash`, `main.ts:151-157`).
 
 - Check: review.

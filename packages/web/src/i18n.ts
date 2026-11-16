@@ -68,6 +68,8 @@ export interface Strings {
   readonly leave: string;
   readonly confirmLeave: string;
   readonly yourTabla: string;
+  /** The toggle that shows a player the card read aloud last, and the card's section while shown. */
+  readonly lastCard: string;
   readonly shout: string;
   readonly claimSent: string;
   readonly claimRejected: string;
@@ -213,6 +215,7 @@ const en: Strings = {
   leave: 'Leave',
   confirmLeave: 'Leave this game? You will not get this tabla back.',
   yourTabla: 'Your tabla',
+  lastCard: 'Last card',
   shout: 'ACHIK PUKLLAY!',
   claimSent: 'Sent to the Kawak…',
   claimRejected: "That one didn't count. Keep playing.",
@@ -357,6 +360,7 @@ const es: Strings = {
   leave: 'Salir',
   confirmLeave: '¿Salir de este juego? No podrás recuperar esta tabla.',
   yourTabla: 'Tu tabla',
+  lastCard: 'Última carta',
   shout: 'ACHIK PUKLLAY!',
   claimSent: 'Enviado al Kawak…',
   claimRejected: 'Esa no contó. Sigue jugando.',

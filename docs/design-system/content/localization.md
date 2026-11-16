@@ -51,13 +51,13 @@ Check: `i18n.test.ts` (one meaning per card in each language).
 
 ### The page says its language
 
-`render()` sets `<html lang>` and the title each time (`main.ts:121-123`).
+`render()` sets `<html lang>` and the title each time (`main.ts:123-125`).
 
 Check: review.
 
 ## Choosing a language
 
-`pickLang(saved, navigator.languages)` (`i18n.ts:393-400`): a saved choice wins, then the first preferred language the app has by primary subtag (`es-MX` counts as Spanish), then English. The switch saves to `localStorage` under `loteria.lang.v1`; when storage is blocked, the choice lasts as long as the page.
+`pickLang(saved, navigator.languages)` (`i18n.ts:397-404`): a saved choice wins, then the first preferred language the app has by primary subtag (`es-MX` counts as Spanish), then English. The switch saves to `localStorage` under `loteria.lang.v1`; when storage is blocked, the choice lasts as long as the page.
 
 Check: `i18n.test.ts` (`pickLang`).
 

@@ -5,9 +5,10 @@
  * hold one value per room and replay any sequence in a test. Randomness arrives as a seeded
  * {@link Rng}; the same seed and the same moves produce the same game.
  *
- * The game is played in person. Players hear the cards from the caller, not from their phones, so a
- * player may put a bean on any card of their tabla, called or not. Shouting ACHIK PUKLLAY only puts
- * a claim in front of the caller; the caller checks it and grants the win or turns it down.
+ * The game is played in person. Players hear the cards from the caller; a phone shows at most the
+ * latest one. So a player may put a bean on any card of their tabla, called or not. Shouting ACHIK
+ * PUKLLAY only puts a claim in front of the caller; the caller checks it and grants the win or
+ * turns it down.
  *
  * A round awards the prizes its rule names, one at a time: under `line-then-full` the first line
  * wins and play goes on for a full tabla. The round is over once every prize is won.

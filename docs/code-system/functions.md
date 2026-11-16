@@ -4,11 +4,11 @@
 
 ### A move returns a new game or a typed error
 
-Every move in `game.ts` takes a `Game` and returns `GameResult`: `{ ok: true, game }` or `{ ok: false, error }`, built by `ok` and `fail` (`game.ts:67-70`). A refused move is a value, not an exception. The error is a `GameError`, which joins the wire's `ErrorCode` list and has a sentence in every language.
+Every move in `game.ts` takes a `Game` and returns `GameResult`: `{ ok: true, game }` or `{ ok: false, error }`, built by `ok` and `fail` (`game.ts:68-71`). A refused move is a value, not an exception. The error is a `GameError`, which joins the wire's `ErrorCode` list and has a sentence in every language.
 
 A move that cannot be refused returns `Game` directly: `newGame`, `addPlayer`, `newRound`.
 
-- Conforming: `drawCard` returns `fail('claim-pending')` while a claim waits (`game.ts:119`).
+- Conforming: `drawCard` returns `fail('claim-pending')` while a claim waits (`game.ts:120`).
 - Non-conforming: `throw new Error('claim pending')` from a move.
 
 Check: `tsc --build` (the return type); review.
@@ -17,7 +17,7 @@ Check: `tsc --build` (the return type); review.
 
 A move runs the checks that apply to it in this order: the round is over (`game-over`); the player exists (`unknown-player`); a claim is waiting (`claim-pending`); the move's own condition (`not-on-tabla`, `deck-empty`, `no-claim`, `no-win`, `round-started`). Each is an early `return fail(…)`.
 
-- Conforming: `toggleMark` (`game.ts:128-142`).
+- Conforming: `toggleMark` (`game.ts:129-143`).
 
 Check: review.
 
@@ -46,7 +46,7 @@ Check: review.
 
 ### An internal invariant throws; it is never defaulted
 
-A value that can be wrong only through a bug upstream throws with what was wrong: `card(id)` for an id the protocol already validated (`cards.ts:76-80`), `seated(game, playerId)` for a player the game must hold (`protocol.ts:140-144`).
+A value that can be wrong only through a bug upstream throws with what was wrong: `card(id)` for an id the protocol already validated (`cards.ts:76-80`), `seated(game, playerId)` for a player the game must hold (`protocol.ts:142-146`).
 
 - Non-conforming: `card(id) ?? DECK[0]`.
 
@@ -68,6 +68,6 @@ Check: review.
 
 ### A `switch` on a message names every case
 
-A `switch` on a message's `t` has one `case` per message type, and TypeScript narrows the message inside each. These handlers return `void`, so a missing case does not fail to compile: a new message type means finding each switch on it, `handle` in `hub.ts:84-135` and `onMessage` in `web/src/main.ts:157-198`. `noFallthroughCasesInSwitch` is on.
+A `switch` on a message's `t` has one `case` per message type, and TypeScript narrows the message inside each. These handlers return `void`, so a missing case does not fail to compile: a new message type means finding each switch on it, `handle` in `hub.ts:84-135` and `onMessage` in `web/src/main.ts:159-201`. `noFallthroughCasesInSwitch` is on.
 
 Check: `tsc --build` for fallthrough; a missing case is review.

@@ -6,8 +6,8 @@ A frijol on a marked card. Two spans: the spot, placed and tilted on the card, a
 
 | Piece                          | Where                | Does                                                                                                          |
 | ------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `beanHtml(round, id, elapsed)` | `render.ts:255-258`  | The markup, with the spot's custom properties inline; `bean-rolling` while `elapsed` is set                   |
-| `beanSpot(round, id)`          | `render.ts:232-252`  | The spot and roll waypoints as custom properties, in % of the card, from the seeded generator                 |
+| `beanHtml(round, id, elapsed)` | `render.ts:268-271`  | The markup, with the spot's custom properties inline; `bean-rolling` while `elapsed` is set                   |
+| `beanSpot(round, id)`          | `render.ts:245-265`  | The spot and roll waypoints as custom properties, in % of the card, from the seeded generator                 |
 | `bean-spot`                    | `styles.css:44-53`   | Absolute at `--x`, `--y`, tilted `--turn`, `--spacing-bean` wide (38% of the card), 100:64, no pointer events |
 | `bean`                         | `styles.css:60-68`   | The SVG drawing, a paper-colored halo that sets it apart from dark art, and its drop shadow                   |
 | `bean-rolling`                 | `styles.css:161-170` | The roll, under `prefers-reduced-motion: no-preference`                                                       |

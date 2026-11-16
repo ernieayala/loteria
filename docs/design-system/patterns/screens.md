@@ -15,7 +15,7 @@ A first-time visitor has to say only one thing: are they joining, or starting. E
 
 ## Home
 
-`homeHtml(online, lang)` (`render.ts:456-471`).
+`homeHtml(online, lang)` (`render.ts:477-492`).
 
 | Row     | Contents                                                                                                                                                                                          |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -39,22 +39,22 @@ The name last joined with is remembered (`loadName`, `session.ts`) and filled in
 
 ## Waiting
 
-`waitingHtml(online, lang)` (`render.ts:513-518`): loading dots centered in the column, "Connecting…" for screen readers. Shown between a seat being remembered and its first view arriving.
+`waitingHtml(online, lang)` (`render.ts:534-539`): loading dots centered in the column, "Connecting…" for screen readers. Shown between a seat being remembered and its first view arriving.
 
 ## Caller
 
-`hostHtml(view, online, lang, origin)` (`render.ts:548-603`). `origin` is `location.origin`, passed in by `main.ts` for the join link.
+`hostHtml(view, online, lang, origin)` (`render.ts:569-613`). `origin` is `location.origin`, passed in by `main.ts` for the lobby's QR code.
 
 | Row           | Contents                                                                                                                                                                                                                                                                                                                  |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Banner        | Reconnecting, while offline                                                                                                                                                                                                                                                                                               |
-| Header        | "Room code" (`h1`), the [room code](../components/room-code.md), and the join link once the first card is out; Invite, the language switch, End game                                                                                                                                                                      |
-| Players       | "Players (n)" and the [seat list](../components/seat-list.md)                                                                                                                                                                                                                                                             |
+| Header        | One row: "Room code" (`h1`) over the [room code](../components/room-code.md); Invite, the language switch, End game, which wrap to a second row only where the phone is too narrow (320px). No join link: the lobby's QR code carries it, and Invite shares it at any time                                                |
+| Players       | "Players (n)" and the [seat list](../components/seat-list.md), one row that scrolls sideways however many join                                                                                                                                                                                                            |
 | Flexible area | One of: once the round is over, the last winner's [tabla](../components/tabla.md) with any earlier winner named; the first waiting claim's tabla with its verdict; the current [card face](../components/card-face.md) with its meaning, under the prize status once a prize is won; or, before the first card, the lobby |
 | Calls         | The round status ("Round 2 · Line, then full tabla · 14 called · 40 left") and, with no tabla on screen, the [called row](../components/called-row.md)                                                                                                                                                                    |
-| Action        | Grant win or Not a win while a claim waits; New round once the round is over or the deck is out; Next card otherwise (`hostActionHtml`, `render.ts:525-545`)                                                                                                                                                              |
+| Action        | Grant win or Not a win while a claim waits; New round once the round is over or the deck is out; Next card otherwise (`hostActionHtml`, `render.ts:546-566`)                                                                                                                                                              |
 
-The lobby (`lobbyHtml`) shows, top to bottom: the join link as a QR code (`qrHtml`), black on white and as large as the room left allows, captioned "Scan to join"; the rule picker; and "When everyone is in, press Next card." It replaces the printed join link in the header, since the QR code carries it. Measured with no scroll: the QR code is 88px across at 320x568, 187px at 375x667, 352px at 412x780.
+The lobby (`lobbyHtml`) shows, top to bottom: the join link as a QR code (`qrHtml`), black on white and as large as the room left allows, captioned "Scan to join"; the rule picker; and "When everyone is in, press Next card." Measured with no scroll: the QR code is 134px across at 320x568 with nobody in yet, 111px with eight players; 172px at 375x629 with eight.
 
 The rule picker (`rulePickerHtml`) is a group headed "To win this round" with three toggle [buttons](../components/button.md): Line, then full tabla; Line only; Full tabla only. The chosen one is `primary` and `aria-pressed="true"`, the others `outline`. It shows only until the first card, because the rule cannot change after (`setRule` refuses with `round-started`). A new game starts on Line, then full tabla, the way the game is usually played; a new round keeps the last one.
 
@@ -64,22 +64,22 @@ A waiting claim holds the deck: the caller rules before calling on. Grant win ap
 
 ## Player
 
-`playerHtml(view, online, lang, rolling)` (`render.ts:615-649`).
+`playerHtml(view, online, lang, rolling, peeking)` (`render.ts:645-686`).
 
-| Row           | Contents                                                                                                                                                                                                                                         |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Banner        | Reconnecting, while offline                                                                                                                                                                                                                      |
-| Header        | The player's name (`h1`), "Room ABCD · Round 2 · Line, then full tabla"; the language switch, Leave                                                                                                                                              |
-| Flexible area | The player's own tabla (interactive), under the prize status once a prize is won ("You got the line. Keep going for a full tabla." on the winner's own phone); or, once the round is over, the last winner's tabla with any earlier winner named |
-| Action        | ACHIK PUKLLAY! (`error`, `action`); "Sent to the Kawak…" while the claim waits; "That one didn't count. Keep playing." above the button after a no. With the round over: "Waiting for the Kawak to start a new round."                           |
+| Row           | Contents                                                                                                                                                                                                                                                                                                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Banner        | Reconnecting, while offline                                                                                                                                                                                                                                                                                                        |
+| Header        | The player's name (`h1`), "Room ABCD · Round 2 · Line, then full tabla"; the language switch, Leave                                                                                                                                                                                                                                |
+| Flexible area | The player's own tabla (interactive), or the last call's [card face](../components/card-face.md) while Last card is on, under the prize status once a prize is won ("You got the line. Keep going for a full tabla." on the winner's own phone); or, once the round is over, the last winner's tabla with any earlier winner named |
+| Action        | One row (`playerActionHtml`): Last card, then ACHIK PUKLLAY! (`error`, `action`) taking the rest; "Sent to the Kawak…" in the shout's place while the claim waits; "That one didn't count. Keep playing." above the row after a no. With the round over: "Waiting for the Kawak to start a new round."                             |
 
-A player's screen never shows a called card. The cards are heard at the table, and the player's view carries none ([protocol](../../code-system/glossary.md#the-table-not-the-phone)).
+The cards are heard at the table. A player who missed one presses Last card (`outline`, `side`, `id="last-card"`), beside the shout so it costs the tabla no height and sits under the thumb: a toggle, `primary` and `aria-pressed="true"` while on, disabled before the first call, gone with the shout once the round is over. While on, the latest call's card face and meaning take the tabla's place and follow each new call, which is spoken; a tap on the card or the toggle brings the tabla back. It turns off at each new round and each new seat. The toggle lives in the page (`peeking`, `main.ts`), and the player's view carries only the latest call, never the ones before it ([protocol](../../code-system/glossary.md#the-table-not-the-phone)), so keeping up still means listening.
 
 ## Rules
 
 **One `h1` per screen, and sections are labelled.** Each `<section>` has `aria-labelledby` pointing at its heading, or `aria-label` when it has none on screen.
 
-- Conforming: `<section aria-labelledby="players-heading">` (`render.ts:572`).
+- Conforming: `<section aria-labelledby="players-heading">` (`render.ts:588`).
 - Non-conforming: an unlabelled `<section>`, which a screen reader lists as nothing.
 - Check: review.
 

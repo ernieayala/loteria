@@ -47,11 +47,11 @@ Check: review.
 
 `qrHtml` draws the join link with `uqr`'s `renderSVG`, black on white with a two-module margin, in a size container so it stays square at whatever room the lobby leaves. It is `role="img"` labelled "Scan to join: A B C D", so a screen reader user hears the code itself, and it is captioned "Scan to join" for everyone.
 
-Check: `render.test.ts` ("shows the join link … as a QR code before the first card"); scanning is review, on a real phone.
+Check: `render.test.ts` ("shows the join link as a QR code before the first card, and leaves it to Invite after"); scanning is review, on a real phone.
 
 ### Decorative marks are hidden
 
-The seat dot (`render.ts:318`) and the loading dots (`render.ts:516`) are `aria-hidden`; the words beside them carry the meaning (", offline", "Connecting…").
+The seat dot (`render.ts:335`) and the loading dots (`render.ts:537`) are `aria-hidden`; the words beside them carry the meaning (", offline", "Connecting…").
 
 - Non-conforming: an icon-only button. Every button has a text label.
 

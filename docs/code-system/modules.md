@@ -14,7 +14,7 @@ The packages keep the repo's original `loteria` name; the game they play is Achi
 
 The server serves the web app's built folder by path (`server.ts:11`); the two packages never import each other.
 
-- Conforming: `main.ts` sends `{ t: 'mark', card }` for every tap and lets the server refuse (`main.ts:276-277`).
+- Conforming: `main.ts` sends `{ t: 'mark', card }` for every tap and lets the server refuse (`main.ts:279-280`).
 - Non-conforming: the page checking `view.claim !== 'pending'` before sending a mark. The tabla is locked on screen, but the rule lives in `toggleMark`.
 
 Check: `tsc --build` (a package can import only what its `references` and dependencies name); the rest is review.
@@ -45,7 +45,7 @@ Check: `tsc --build` (a package can import only what its `references` and depend
 
 A file holds one job. A second job is a second file.
 
-- Conforming: `render.ts` reads no globals; `main.ts` passes it `location.origin` for the join link.
+- Conforming: `render.ts` reads no globals; `main.ts` passes it `location.origin` for the join link the lobby's QR code holds.
 - Non-conforming: a render function reading `location` or `localStorage` itself.
 
 Check: review.

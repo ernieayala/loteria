@@ -59,6 +59,8 @@ const BUTTON_VARIANT = {
 const BUTTON_SIZE = {
   /** The one main action at the bottom of a screen. A 20px bold label counts as large text. */
   action: 'btn-lg h-14 w-full text-xl font-bold',
+  /** A narrow button sharing the main action's row, before it: as tall, so the row stays one line. */
+  side: 'h-14 w-20 shrink-0 px-2 leading-tight',
   /** Full width inside a form or panel. */
   block: 'btn-lg w-full',
   /** One of the home screen's two ways in: a large full-width card with a title and a line under it. */
@@ -144,6 +146,17 @@ function currentCardHtml(id: CardId, t: Strings): string {
     ${artHtml(id, 'current', `alt="${id}, ${esc(card(id).name)}" lang="${KICHWA}" class="size-full min-h-0 object-contain drop-shadow-md"`)}
     <figcaption class="text-center text-2xl font-bold">${esc(cardMeaning(t, id))}</figcaption>
   </figure>`;
+}
+
+/**
+ * A {@link currentCardHtml} filling the screen's flexible area. A grid track gives the card a
+ * settled height to scale into; a flex item's grown size in this min-height column does not.
+ * `attrs` are further attributes, already escaped.
+ */
+function cardSectionHtml(id: CardId, label: string, t: Strings, attrs = ''): string {
+  return `<section aria-label="${label}" ${attrs} class="grid min-h-40 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)]">
+    ${currentCardHtml(id, t)}
+  </section>`;
 }
 
 /** Earlier calls, newest first, in one row that scrolls sideways so it never pushes the page down. */
@@ -310,11 +323,15 @@ function tablaHtml(tabla: readonly CardId[], opts: TablaOptions): string {
 
 // ---- shared pieces ------------------------------------------------------------------------------
 
+/**
+ * Every seat as a badge, in one row that scrolls sideways, so ten players take no more height than
+ * one. It takes focus so a keyboard can scroll it, as the called row does.
+ */
 function seatsHtml(players: HostView['players'], t: Strings): string {
   if (!players.length) return `<p class="text-sm">${t.noPlayers}</p>`;
-  return `<ul class="flex flex-wrap gap-1.5">${players
+  return `<ul tabindex="0" aria-labelledby="players-heading" class="flex gap-1.5 overflow-x-auto pb-1">${players
     .map(
-      (p) => `<li class="badge gap-1.5 ${p.connected ? 'badge-outline' : 'badge-ghost'}">
+      (p) => `<li class="badge shrink-0 gap-1.5 whitespace-nowrap ${p.connected ? 'badge-outline' : 'badge-ghost'}">
         <span class="inline-block size-2 rounded-full ${p.connected ? 'bg-success' : 'bg-edge'}" aria-hidden="true"></span>${esc(p.name)}${p.connected ? '' : `<span class="sr-only">${t.offline}</span>`}</li>`,
     )
     .join('')}</ul>`;
@@ -334,7 +351,7 @@ function roundOverHtml(winners: readonly WinnerView[], round: number, t: Strings
   const earlier = winners.slice(0, -1);
   return `<section aria-labelledby="winner-heading" class="flex flex-1 flex-col gap-2">
     <div class="text-center">
-      <h2 id="winner-heading" class="text-2xl font-black"><span lang="${KICHWA}">${t.shout}</span> ${wonText(last, t, you)}</h2>
+      <h2 id="winner-heading" class="text-xl font-black"><span lang="${KICHWA}">${t.shout}</span> ${wonText(last, t, you)}</h2>
       ${earlier.map((w) => `<p class="text-sm font-semibold">${wonText(w, t, you)}</p>`).join('')}
     </div>
     ${tablaHtml(last.tabla, {
@@ -421,16 +438,20 @@ export function hostAnnouncement(prev: HostView | null, next: HostView, t: Strin
 }
 
 /**
- * What a player's screen reader should hear. Never a card: players hear those from the caller. A
- * claim is only acknowledged as sent; the verdict comes when the caller gives it.
+ * What a player's screen reader should hear. A card only while the Last card toggle shows it, as a
+ * sighted player sees it change; otherwise players hear cards from the caller. A claim is only
+ * acknowledged as sent; the verdict comes when the caller gives it.
  */
-export function playerAnnouncement(prev: PlayerView | null, next: PlayerView, t: Strings): string {
+export function playerAnnouncement(prev: PlayerView | null, next: PlayerView, t: Strings, peeking: boolean): string {
   if (prev && prev.round !== next.round) return t.saidRoundStarted(next.round);
   const won = newWinner(prev, next);
   if (won) return won.playerId === next.you ? t.saidYouWon(won.prize) : t.saidWon(won.name, won.prize);
   if (next.claim !== prev?.claim) {
     if (next.claim === 'pending') return t.claimSent;
     if (next.claim === 'rejected') return t.claimRejected;
+  }
+  if (peeking && next.prize !== null && next.last !== null && next.last !== prev?.last) {
+    return t.saidCard(next.last, card(next.last).name, cardMeaning(t, next.last));
   }
   return '';
 }
@@ -549,23 +570,18 @@ export function hostHtml(view: HostView, online: boolean, lang: Lang, origin: st
   const t = STRINGS[lang];
   const [current, ...earlier] = [...view.called].reverse();
   const [claim, ...queued] = view.claims;
-  const lobby = view.prize !== null && !claim && current === undefined;
+  // One row, so the card or tabla below keeps the height. The join link is not printed: the lobby's
+  // QR code carries it, and Invite shares it at any time. The buttons wrap only on the narrowest phones.
   return `${offlineBannerHtml(online, t)}
-    <header class="flex items-start justify-between gap-2">
-      <div class="min-w-0">
-        <h1 class="text-sm font-semibold">${t.roomCode}</h1>
-        <p class="font-mono text-4xl leading-tight font-black tracking-[0.2em]">${roomCodeHtml(view.code)}</p>
-        ${
-          // Before the first card the QR code carries the link, and the room is better spent on it.
-          lobby ? '' : `<p class="text-xs break-all">${esc(joinLink(origin, view.code))}</p>`
-        }
+    <header class="flex items-center justify-between gap-2">
+      <div class="shrink-0">
+        <h1 class="text-xs font-semibold">${t.roomCode}</h1>
+        <p class="font-mono text-2xl leading-tight font-black tracking-[0.15em]">${roomCodeHtml(view.code)}</p>
       </div>
-      <div class="flex shrink-0 flex-col items-end gap-1">
-        ${buttonHtml(t.invite, { variant: 'neutral', size: 'regular', action: 'share' })}
-        <div class="flex">
-          ${langSwitchHtml(lang)}
-          ${buttonHtml(t.endGame, { variant: 'ghost', size: 'compact', action: 'leave' })}
-        </div>
+      <div class="flex min-w-0 flex-wrap items-center justify-end gap-1">
+        ${buttonHtml(t.invite, { variant: 'neutral', size: 'compact', action: 'share' })}
+        ${langSwitchHtml(lang)}
+        ${buttonHtml(t.endGame, { variant: 'ghost', size: 'compact', action: 'leave' })}
       </div>
     </header>
 
@@ -581,13 +597,7 @@ export function hostHtml(view: HostView, online: boolean, lang: Lang, origin: st
           ? claimHtml(claim, queued.length, new Set(view.called), view.round, view.prize, t)
           : current
             ? `${prizeStatusHtml(view.winners, view.prize, t)}
-            ${
-              // A grid track gives the card a settled height to scale into; a flex item's grown
-              // size in this min-height column does not.
-              `<section aria-label="${t.currentCard}" class="grid min-h-40 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)]">
-              ${currentCardHtml(current, t)}
-            </section>`
-            }`
+            ${cardSectionHtml(current, t.currentCard, t)}`
             : lobbyHtml(view, online, origin, t)
     }
 
@@ -602,23 +612,45 @@ export function hostHtml(view: HostView, online: boolean, lang: Lang, origin: st
     ${hostActionHtml(view, online, t)}`;
 }
 
-/** Where the ACHIK PUKLLAY button goes: the button, or word that the claim is with the caller. */
-function playerActionHtml(view: PlayerView, online: boolean, t: Strings): string {
-  if (view.claim === 'pending') {
-    return `<p class="flex h-14 items-center justify-center rounded-box border-2 border-edge text-xl font-bold">${t.claimSent}</p>`;
-  }
+/**
+ * The bottom row of a round in play: the Last card toggle, then the ACHIK PUKLLAY button, or word
+ * that the claim is with the caller, taking the rest of the row. The toggle sits here, not in the
+ * header, so it costs the tabla no height and is where the thumb is.
+ */
+function playerActionHtml(view: PlayerView, online: boolean, shown: CardId | null, t: Strings): string {
+  const lastCard = buttonHtml(t.lastCard, {
+    variant: shown === null ? 'outline' : 'primary',
+    size: 'side',
+    action: 'peek',
+    // Nothing to show before the first call. Offline it still shows the last call it was sent.
+    disabled: view.last === null,
+    // The id, not the action the card shares, is how focus finds the toggle after a render.
+    attrs: `id="last-card" aria-pressed="${shown !== null}"`,
+  });
+  const shout =
+    view.claim === 'pending'
+      ? `<p class="flex h-14 items-center justify-center rounded-box border-2 border-edge text-center text-xl font-bold">${t.claimSent}</p>`
+      : buttonHtml(t.shout, { variant: 'error', size: 'action', action: 'claim', disabled: !online });
+  // daisyUI buttons do not shrink, so the shout's full width is the wrapper's, which takes what is left.
   return `${view.claim === 'rejected' ? `<p class="text-center font-semibold">${t.claimRejected}</p>` : ''}
-    ${buttonHtml(t.shout, { variant: 'error', size: 'action', action: 'claim', disabled: !online })}`;
+    <div class="flex gap-2">${lastCard}<div class="min-w-0 flex-1">${shout}</div></div>`;
 }
 
-/** `rolling` holds the beans still rolling onto the card, with how far into their roll each is. */
+/**
+ * `rolling` holds the beans still rolling onto the card, with how far into their roll each is.
+ * `peeking` is the player's Last card toggle: while it is on and the round plays, the last call takes
+ * the tabla's place, and a tap on it or on the toggle brings the tabla back. It follows each new
+ * call. The page keeps the toggle; the server never hears of it.
+ */
 export function playerHtml(
   view: PlayerView,
   online: boolean,
   lang: Lang,
   rolling: ReadonlyMap<CardId, number>,
+  peeking: boolean,
 ): string {
   const t = STRINGS[lang];
+  const shown = peeking ? view.last : null;
   return `${offlineBannerHtml(online, t)}
     <header class="flex items-center justify-between gap-2">
       <div class="min-w-0 flex-1">
@@ -634,7 +666,9 @@ export function playerHtml(
         ? `${roundOverHtml(view.winners, view.round, t, view.you)}
           <p class="py-3 text-center">${t.waitingNewRound}</p>`
         : `${prizeStatusHtml(view.winners, view.prize, t, view.you)}
-          <section aria-label="${t.yourTabla}" class="flex flex-1 flex-col">
+          ${
+            shown === null
+              ? `<section aria-label="${t.yourTabla}" class="flex flex-1 flex-col">
             ${tablaHtml(view.tabla, {
               round: view.round,
               marked: new Set(view.marked),
@@ -643,8 +677,11 @@ export function playerHtml(
               locked: view.claim === 'pending' || !online,
               rolling,
             })}
-          </section>
-          ${playerActionHtml(view, online, t)}`
+          </section>`
+              : // A tap anywhere on the card closes it, for a quick look; the toggle is the control a keyboard reaches.
+                cardSectionHtml(shown, t.lastCard, t, 'data-action="peek"')
+          }
+          ${playerActionHtml(view, online, shown, t)}`
     }`;
 }
 
