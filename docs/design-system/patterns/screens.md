@@ -15,7 +15,7 @@ A first-time visitor has to say only one thing: are they joining, or starting. E
 
 ## Home
 
-`homeHtml(online, lang)` (`render.ts:477-492`).
+`homeHtml(online, lang)` (`render.ts:492-507`).
 
 | Row     | Contents                                                                                                                                                                                          |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -39,11 +39,11 @@ The name last joined with is remembered (`loadName`, `session.ts`) and filled in
 
 ## Waiting
 
-`waitingHtml(online, lang)` (`render.ts:534-539`): loading dots centered in the column, "Connecting…" for screen readers. Shown between a seat being remembered and its first view arriving.
+`waitingHtml(online, lang)` (`render.ts:549-554`): loading dots centered in the column, "Connecting…" for screen readers. Shown between a seat being remembered and its first view arriving.
 
 ## Caller
 
-`hostHtml(view, online, lang, origin)` (`render.ts:569-613`). `origin` is `location.origin`, passed in by `main.ts` for the lobby's QR code.
+`hostHtml(view, online, lang, origin)` (`render.ts:584-628`). `origin` is `location.origin`, passed in by `main.ts` for the lobby's QR code.
 
 | Row           | Contents                                                                                                                                                                                                                                                                                                                  |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -52,7 +52,7 @@ The name last joined with is remembered (`loadName`, `session.ts`) and filled in
 | Players       | "Players (n)" and the [seat list](../components/seat-list.md), one row that scrolls sideways however many join                                                                                                                                                                                                            |
 | Flexible area | One of: once the round is over, the last winner's [tabla](../components/tabla.md) with any earlier winner named; the first waiting claim's tabla with its verdict; the current [card face](../components/card-face.md) with its meaning, under the prize status once a prize is won; or, before the first card, the lobby |
 | Calls         | The round status ("Round 2 · Line, then full tabla · 14 called · 40 left") and, with no tabla on screen, the [called row](../components/called-row.md)                                                                                                                                                                    |
-| Action        | Grant win or Not a win while a claim waits; New round once the round is over or the deck is out; Next card otherwise (`hostActionHtml`, `render.ts:546-566`)                                                                                                                                                              |
+| Action        | Grant win or Not a win while a claim waits; New round once the round is over or the deck is out; Next card otherwise (`hostActionHtml`, `render.ts:561-581`)                                                                                                                                                              |
 
 The lobby (`lobbyHtml`) shows, top to bottom: the join link as a QR code (`qrHtml`), black on white and as large as the room left allows, captioned "Scan to join"; the rule picker; and "When everyone is in, press Next card." Measured with no scroll: the QR code is 134px across at 320x568 with nobody in yet, 111px with eight players; 172px at 375x629 with eight.
 
@@ -64,7 +64,7 @@ A waiting claim holds the deck: the caller rules before calling on. Grant win ap
 
 ## Player
 
-`playerHtml(view, online, lang, rolling, peeking)` (`render.ts:645-686`).
+`playerHtml(view, online, lang, rolling, peeking)` (`render.ts:660-701`).
 
 | Row           | Contents                                                                                                                                                                                                                                                                                                                           |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -79,7 +79,7 @@ The cards are heard at the table. A player who missed one presses Last card (`ou
 
 **One `h1` per screen, and sections are labelled.** Each `<section>` has `aria-labelledby` pointing at its heading, or `aria-label` when it has none on screen.
 
-- Conforming: `<section aria-labelledby="players-heading">` (`render.ts:588`).
+- Conforming: `<section aria-labelledby="players-heading">` (`render.ts:603`).
 - Non-conforming: an unlabelled `<section>`, which a screen reader lists as nothing.
 - Check: review.
 

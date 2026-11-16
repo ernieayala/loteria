@@ -4,7 +4,7 @@ The two fields on the join form: room code and name. daisyUI `input input-lg w-f
 
 ## Anatomy
 
-A `text-sm font-medium` `<label for>` above the field, `gap-1`, in a `flex flex-col` (`render.ts:517-529`).
+A `text-sm font-medium` `<label for>` above the field, `gap-1`, in a `flex flex-col` (`render.ts:532-544`).
 
 ## Fields
 

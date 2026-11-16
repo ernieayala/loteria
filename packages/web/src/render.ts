@@ -126,14 +126,6 @@ function artHtml(id: CardId, where: keyof typeof ART_SIZES, attrs: string): stri
 }
 
 /**
- * A card's number on its own backing, over the one printed on the art. The printed number is too
- * small to read in a tabla cell or a thumbnail, and a bean may land on it; this one stays legible
- * above both.
- */
-const cardNumberHtml = (id: CardId): string =>
-  `<span class="absolute top-0.5 left-1 z-10 rounded-sm bg-base-100 px-0.5 text-card-number leading-none font-bold" aria-hidden="true">${id}</span>`;
-
-/**
  * The card the caller just drew, as large as the slot allows, with its meaning in the page's
  * language underneath for the caller to read out after the Kichwa name printed on the card.
  *
@@ -167,8 +159,7 @@ function calledRowHtml(ids: readonly CardId[], t: Strings): string {
       .map(
         (
           id,
-        ) => `<li class="shrink-0"><div role="img" lang="${KICHWA}" aria-label="${id}, ${esc(card(id).name)}" class="relative w-12">
-          ${cardNumberHtml(id)}
+        ) => `<li class="shrink-0"><div role="img" lang="${KICHWA}" aria-label="${id}, ${esc(card(id).name)}" class="w-12">
           ${artHtml(id, 'thumb', 'alt="" class="block aspect-[8/11] w-full"')}
         </div></li>`,
       )
@@ -286,12 +277,28 @@ interface TablaOptions {
   readonly rolling?: ReadonlyMap<CardId, number>;
 }
 
+/** The gap between tabla cards: `gap-1.5`, which the board's size has to count. */
+const TABLA_GAP = '0.375rem';
+
 /**
- * A 4x4 tabla that fills its parent's height. On a player's own phone each cell is a toggle button;
- * elsewhere it is a picture. Every cell shows the whole card, its printed name included, scaled to
- * fit the cell; the name is also the cell's label. Each cell is a width container, so the bean
- * scales with it. The card number sits on its own backing above the bean, so wherever a bean lands
- * the caller can still read it to check a tabla.
+ * The shortest a tabla card may be. A player's card is a tap target, so it stays 44px wide at the
+ * art's 8:11; a card that is only looked at may go down to 3rem tall.
+ */
+const TABLA_CARD_MIN_HEIGHT = { interactive: 'calc(2.75rem * 11 / 8)', picture: '3rem' } as const;
+
+/**
+ * A 4x4 tabla that fills its parent's height. On a player's own phone each card is a toggle button;
+ * elsewhere it is a picture. Each card is drawn alone at the art's own 8:11, so the art's printed
+ * frame is its only border; a frame of our own around it would read as a card inside a card.
+ *
+ * The board takes the shape of the cards, not of the room: the room is a size container, and
+ * each card is as wide as the room allows for a full board at 8:11 with its gaps, whichever of width
+ * or height runs out first. So the cards always sit together at an even gap, and room left over
+ * goes around the board rather than between the cards. The room's floor keeps every card at its
+ * minimum height; below it the page scrolls.
+ *
+ * Each card is a width container, so the bean scales with it, and carries the winning and
+ * not-called marks so they hug the art. The number is the one printed on the art.
  */
 function tablaHtml(tabla: readonly CardId[], opts: TablaOptions): string {
   const cells = tabla
@@ -304,21 +311,29 @@ function tablaHtml(tabla: readonly CardId[], opts: TablaOptions): string {
       const attrs = opts.interactive
         ? `type="button" data-action="mark" data-card="${id}" aria-pressed="${marked}" aria-label="${name}" ${opts.locked ? 'disabled' : ''}`
         : `role="img" aria-label="${name}${winningLabel ?? ''}${notCalledLabel ?? ''}"`;
-      return `<${tag} ${attrs} lang="${KICHWA}" class="relative min-w-0 overflow-hidden rounded-box border-2 bg-base-100 [container-type:inline-size] ${
+      return `<${tag} ${attrs} lang="${KICHWA}" class="relative block aspect-[8/11] [container-type:inline-size] ${
         winningLabel !== null
-          ? 'border-success ring-4 ring-success/60'
+          ? 'ring-4 ring-success'
           : notCalledLabel !== null
-            ? 'crossed-out border-dashed border-base-content'
-            : 'border-edge'
+            ? 'crossed-out outline-2 outline-offset-2 outline-base-content outline-dashed'
+            : ''
       } ${opts.interactive && !opts.locked ? 'cursor-pointer select-none motion-safe:active:scale-95' : ''}">
-        ${cardNumberHtml(id)}
-        ${artHtml(id, 'cell', 'alt="" class="absolute inset-0 size-full object-contain p-0.5"')}
+        ${artHtml(id, 'cell', 'alt="" class="absolute inset-0 size-full object-contain"')}
         ${marked ? beanHtml(opts.round, id, opts.rolling?.get(id)) : ''}
       </${tag}>`;
     })
     .join('');
-  // Rows never shrink below 3rem, so a tap target stays above 44px however short the phone.
-  return `<div class="grid flex-1 gap-1.5" style="grid-template-columns: repeat(${TABLA_SIDE}, minmax(0, 1fr)); grid-template-rows: repeat(${TABLA_SIDE}, minmax(3rem, 1fr))">${cells}</div>`;
+  const gaps = `${TABLA_SIDE - 1} * ${TABLA_GAP}`;
+  const minHeight = TABLA_CARD_MIN_HEIGHT[opts.interactive ? 'interactive' : 'picture'];
+  // The grid is built from the core constant, so it cannot disagree with core if the side changed.
+  const cardWidth = `min((100cqw - ${gaps}) / ${TABLA_SIDE}, (100cqh - ${gaps}) / ${TABLA_SIDE} * 8 / 11)`;
+  // The size container sits in a grid track, as the card face does: a flex item's grown height in
+  // this min-height column is not definite, and `cqh` inside it would read as 0.
+  return `<div class="grid flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)]" style="min-height: calc(${TABLA_SIDE} * ${minHeight} + ${gaps})">
+    <div class="grid place-items-center [container-type:size]">
+      <div class="grid gap-1.5" style="grid-template-columns: repeat(${TABLA_SIDE}, ${cardWidth})">${cells}</div>
+    </div>
+  </div>`;
 }
 
 // ---- shared pieces ------------------------------------------------------------------------------

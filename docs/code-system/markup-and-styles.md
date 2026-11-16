@@ -17,7 +17,7 @@ Check: review.
 
 Names, room codes typed into the form, player ids put into attributes. App copy from `STRINGS` and card data from `DECK` need no escaping; card names are escaped anyway.
 
-- Conforming: `${esc(p.name)}` (`render.ts:335`).
+- Conforming: `${esc(p.name)}` (`render.ts:350`).
 - Non-conforming: `${claim.name}` in a heading.
 
 Check: review.
@@ -40,7 +40,7 @@ Check: review. A missing class renders unstyled and fails nothing.
 | A look no class can draw (the bean, the strike-through)                          | A `@utility` in `styles.css`, with a comment                                                                                    |
 | A rule every instance of a control must follow (the focus ring, the 44px button) | An unlayered rule in `styles.css`, so it wins over daisyUI's layered styles without specificity games                           |
 | A theme color that fails contrast                                                | The `daisyui/theme` override block                                                                                              |
-| A value computed at render time                                                  | An inline `style` of custom properties (`beanHtml`) or of a layout built from a core constant (the tabla grid, `render.ts:321`) |
+| A value computed at render time                                                  | An inline `style` of custom properties (`beanHtml`) or of a layout built from a core constant (the tabla grid, `render.ts:334`) |
 
 - Non-conforming: a `<style>` block in a string, or `style="color: …"`.
 

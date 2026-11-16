@@ -43,7 +43,7 @@ Focus, disabled: [states](../foundations/states.md). daisyUI darkens a button 5%
 
 ## Keyboard and screen reader
 
-A native `<button>`: Tab reaches it, Enter and Space press it. The visible label is the name. A button that acts on something the label does not name points at it with `aria-describedby`: Grant win and Not a win are described by the claim heading, so a screen reader says whose call is being ruled on (`render.ts:549-554`).
+A native `<button>`: Tab reaches it, Enter and Space press it. The visible label is the name. A button that acts on something the label does not name points at it with `aria-describedby`: Grant win and Not a win are described by the claim heading, so a screen reader says whose call is being ruled on (`render.ts:564-569`).
 
 ## Long text
 
@@ -53,13 +53,13 @@ Labels wrap between words; daisyUI buttons grow in height.
 
 **Every button comes from `buttonHtml`.**
 
-- Do: `buttonHtml(t.invite, { variant: 'neutral', size: 'compact', action: 'share' })` (`render.ts:582`).
+- Do: `buttonHtml(t.invite, { variant: 'neutral', size: 'compact', action: 'share' })` (`render.ts:597`).
 - Don't: `<button class="btn btn-primary">` in a screen function.
 - Check: review.
 
 **At most one `action`-size button per screen, and it is last.** One `side` button may share its row, before it.
 
-- Do: `hostActionHtml` returns exactly one (`render.ts:546-566`); `playerActionHtml` puts Last card before the shout.
+- Do: `hostActionHtml` returns exactly one (`render.ts:561-581`); `playerActionHtml` puts Last card before the shout.
 - Don't: Grant win and Not a win side by side at `action` size. Only the one the claim allows is shown.
 - Check: review.
 

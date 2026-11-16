@@ -100,6 +100,28 @@ describe('playerHtml', () => {
     expect(html).toContain('Round 1 · Full tabla only');
   });
 
+  it('draws each card alone, with no frame of its own around the art', () => {
+    const cells = playerHtml(view, true, 'en', new Map(), false).match(/<button [^>]*data-action="mark"[^>]*>/g) ?? [];
+    expect(cells).toHaveLength(16);
+    for (const cell of cells) expect(cell).not.toMatch(/\b(border|bg-base|rounded)/);
+    // The winning ring sits on the card itself, so it hugs the art.
+    const over = { ...view, prize: null, winners: [{ ...lineWinner, playerId: 'p1' }] };
+    expect(playerHtml(over, true, 'en', new Map(), false)).toMatch(
+      /<div role="img"[^>]*class="[^"]*aspect-\[8\/11\][^"]*ring-4 ring-success/,
+    );
+  });
+
+  it('sizes the board to the cards, so they sit together at one gap', () => {
+    const html = playerHtml(view, true, 'en', new Map(), false);
+    expect(html).toContain(
+      'grid-template-columns: repeat(4, min((100cqw - 3 * 0.375rem) / 4, (100cqh - 3 * 0.375rem) / 4 * 8 / 11))',
+    );
+    // A player's card stays a 44px-wide target; a card only looked at may be smaller.
+    expect(html).toContain('min-height: calc(4 * calc(2.75rem * 11 / 8) + 3 * 0.375rem)');
+    const over = { ...view, prize: null, winners: [lineWinner] };
+    expect(playerHtml(over, true, 'en', new Map(), false)).toContain('min-height: calc(4 * 3rem + 3 * 0.375rem)');
+  });
+
   it('offers the last card only once one is called and the round plays', () => {
     expect(lastCardToggle(playerHtml(view, true, 'en', new Map(), false))).toMatch(/\sdisabled/);
     expect(lastCardToggle(playerHtml({ ...view, last: 1 }, true, 'en', new Map(), false))).not.toMatch(/\sdisabled/);

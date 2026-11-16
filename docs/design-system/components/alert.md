@@ -4,8 +4,8 @@ daisyUI `alert`, in two uses.
 
 | Use                 | Function                                             | Classes                            | Shown                                                         |
 | ------------------- | ---------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------- |
-| Reconnecting banner | `offlineBannerHtml(online, t)` (`render.ts:415-416`) | `alert alert-warning py-2 text-sm` | First row of every screen while the socket is down            |
-| Notice              | `noticeHtml(notice)` (`render.ts:688-690`)           | `alert alert-info shadow-lg`       | In the `#notice` toast for `NOTICE_MS` (2600ms, `main.ts:42`) |
+| Reconnecting banner | `offlineBannerHtml(online, t)` (`render.ts:430-431`) | `alert alert-warning py-2 text-sm` | First row of every screen while the socket is down            |
+| Notice              | `noticeHtml(notice)` (`render.ts:703-705`)           | `alert alert-info shadow-lg`       | In the `#notice` toast for `NOTICE_MS` (2600ms, `main.ts:42`) |
 
 Both colors are the darkened theme roles ([color](../foundations/color.md#a-theme-color-that-fails-aa-is-darkened-in-the-theme-never-patched-per-use)).
 

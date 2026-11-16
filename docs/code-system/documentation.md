@@ -27,7 +27,7 @@ Check: review.
 A line comment says why the code is as it is, when the code cannot: a browser quirk, a measured limit, a rule of the game.
 
 - Conforming: `// The meanings follow the game's printed word list (Shimikuna), shortened to fit under a card.` (`i18n.ts`).
-- Conforming: `// Rows never shrink below 3rem, so a tap target stays above 44px however short the phone.` (`render.ts:320`).
+- Conforming: "The size container sits in a grid track, as the card face does: a flex item's grown height in this min-height column is not definite, and cqh inside it would read as 0." (`render.ts:330-331`).
 - Non-conforming: `// increment the count`.
 
 Check: review.

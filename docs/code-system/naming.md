@@ -57,11 +57,11 @@ One row per kind of identifier. Game words come from the [glossary](glossary.md)
 
 ## CSS
 
-| Kind                    | Pattern                                                                | Examples                                               |
-| ----------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------ |
-| Theme token             | A Tailwind namespace, then the job                                     | `--color-edge`, `--text-card-number`, `--spacing-bean` |
-| Runtime custom property | Short, set inline by `render.ts` and documented where the CSS reads it | `--x`, `--turn`, `--roll-ms`, `--roll-elapsed`         |
-| `@utility`              | kebab-case: the thing or its state                                     | `bean`, `bean-spot`, `bean-rolling`, `crossed-out`     |
-| `@keyframes`            | `<thing>-<motion>`                                                     | `bean-path`, `bean-tumble`                             |
+| Kind                    | Pattern                                                                | Examples                                           |
+| ----------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
+| Theme token             | A Tailwind namespace, then the job                                     | `--color-edge`, `--spacing-bean`                   |
+| Runtime custom property | Short, set inline by `render.ts` and documented where the CSS reads it | `--x`, `--turn`, `--roll-ms`, `--roll-elapsed`     |
+| `@utility`              | kebab-case: the thing or its state                                     | `bean`, `bean-spot`, `bean-rolling`, `crossed-out` |
+| `@keyframes`            | `<thing>-<motion>`                                                     | `bean-path`, `bean-tumble`                         |
 
 Check: ESLint `@typescript-eslint/no-unused-vars` for the `_` prefix; everything else is review.

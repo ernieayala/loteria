@@ -31,9 +31,11 @@ A tabla cell and a called-row thumbnail carry the card name in `aria-label` (wit
 
 Check: review.
 
-### The number has its own backing on small cards
+### The number is the one printed on the art
 
-The printed number is too small to read in a tabla cell or a thumbnail, and a bean may land on it. `cardNumberHtml` draws the number again, top left, on a `bg-base-100` backing above the bean. The caller's large card shows the printed number only.
+Every card shows its own printed number and nothing on top of it: a second number drawn over the art doubles what is already there. A bean may cover the printed number; the name, printed large, stays readable.
+
+- Non-conforming: a number badge over the art.
 
 Check: review.
 
@@ -51,7 +53,7 @@ Check: `render.test.ts` ("shows the join link as a QR code before the first card
 
 ### Decorative marks are hidden
 
-The seat dot (`render.ts:335`) and the loading dots (`render.ts:537`) are `aria-hidden`; the words beside them carry the meaning (", offline", "Connecting…").
+The seat dot (`render.ts:350`) and the loading dots (`render.ts:552`) are `aria-hidden`; the words beside them carry the meaning (", offline", "Connecting…").
 
 - Non-conforming: an icon-only button. Every button has a text label.
 

@@ -26,10 +26,10 @@ Each page states a rule, shows one conforming and one non-conforming example, na
 
 Tokens come in two layers:
 
-| Layer | Named                                                                  | Read by                                                                                           | Example                                                   |
-| ----- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Theme | daisyUI's role names                                                   | Components, through daisyUI and Tailwind classes (`bg-base-100`, `btn-primary`)                   | `--color-base-content`, `--color-success`, `--radius-box` |
-| App   | A Tailwind namespace (`--color-`, `--text-`, `--spacing-`) and the job | Components, through the utility class the namespace generates (`border-edge`, `text-card-number`) | `--color-edge`, `--text-card-number`, `--spacing-bean`    |
+| Layer | Named                                                                  | Read by                                                                         | Example                                                   |
+| ----- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Theme | daisyUI's role names                                                   | Components, through daisyUI and Tailwind classes (`bg-base-100`, `btn-primary`) | `--color-base-content`, `--color-success`, `--radius-box` |
+| App   | A Tailwind namespace (`--color-`, `--text-`, `--spacing-`) and the job | Components, through the utility class the namespace generates (`border-edge`)   | `--color-edge`, `--spacing-bean`                          |
 
 App tokens sit in the `@theme` block (`styles.css:32-37`) so Tailwind makes a class for each. A value no token holds is written as a Tailwind scale class (`gap-1.5`, `text-sm`), never as a raw value in markup.
 
@@ -40,7 +40,7 @@ Check: review. Tailwind does not fail the build on an unknown class; it generate
 | Page                                                                                     | Covers                                                                                            |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | [foundations/color.md](foundations/color.md)                                             | The theme roles, the two overrides, the edge token, every text and surface pair with its contrast |
-| [foundations/typography.md](foundations/typography.md)                                   | The font stacks, the type ramp, the card number, case and wrapping                                |
+| [foundations/typography.md](foundations/typography.md)                                   | The font stacks, the type ramp, case and wrapping                                                 |
 | [foundations/space-and-layout.md](foundations/space-and-layout.md)                       | The phone column, safe areas, the space steps, target sizes, container queries                    |
 | [foundations/frames.md](foundations/frames.md)                                           | Borders, radius, rings, shadows                                                                   |
 | [foundations/imagery.md](foundations/imagery.md)                                         | The card art and how it ships, the bean, decorative marks                                         |
@@ -69,4 +69,4 @@ Add one only when no component in the inventory covers the need. Markup used in 
 
 Example, conforming: every button on every screen comes from `buttonHtml` (`render.ts:84-87`), so the 44px minimum, the focus ring and the variant colors are set once.
 
-Example, non-conforming: the "Sent to the Kawak…" box (`render.ts:632`) draws its own `h-14 rounded-box border-2 border-edge` frame instead of reading a shared one. It is the only place that frame appears, so it is not yet a component; a second use makes it one.
+Example, non-conforming: the "Sent to the Kawak…" box (`render.ts:647`) draws its own `h-14 rounded-box border-2 border-edge` frame instead of reading a shared one. It is the only place that frame appears, so it is not yet a component; a second use makes it one.

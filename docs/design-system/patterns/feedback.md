@@ -6,7 +6,7 @@ How the app tells a player or caller what happened. Five channels, each with one
 | ------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
 | The screen itself   | Every state a game can be in, drawn in place                                               | [screens](screens.md), [states](../foundations/states.md) |
 | Notice (toast)      | A short message about something that did not show on screen: a refused move, a copied link | `flash` (`main.ts:151-157`) into `#notice`                |
-| Reconnecting banner | The socket is down; the screen is stale and actions are paused                             | `offlineBannerHtml` (`render.ts:415-416`)                 |
+| Reconnecting banner | The socket is down; the screen is stale and actions are paused                             | `offlineBannerHtml` (`render.ts:430-431`)                 |
 | Announcement        | What a screen reader should hear after a view arrives                                      | `announce` (`main.ts:147-149`) into `#announcer`          |
 | Confirmation        | Before an action that cannot be undone                                                     | `confirm()` (`main.ts:295`)                               |
 
@@ -25,8 +25,8 @@ The live regions sit outside `#app` (`index.html:10-12`), so they persist across
 
 | Seat   | Hears                                                                                                                                                                                             | Function                                   |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Caller | A new round; a prize won ("Achik Pukllay! Ana got the line."); a new claim and whether it is valid; the latest card called, with its meaning; who joined. One per view, in that order of priority | `hostAnnouncement` (`render.ts:423-438`)   |
-| Player | A new round; a prize won, by them or by another; "Sent to the Kawak…"; a claim turned down; a new call only while Last card shows it. Otherwise cards are heard from the caller                   | `playerAnnouncement` (`render.ts:445-457`) |
+| Caller | A new round; a prize won ("Achik Pukllay! Ana got the line."); a new claim and whether it is valid; the latest card called, with its meaning; who joined. One per view, in that order of priority | `hostAnnouncement` (`render.ts:438-453`)   |
+| Player | A new round; a prize won, by them or by another; "Sent to the Kawak…"; a claim turned down; a new call only while Last card shows it. Otherwise cards are heard from the caller                   | `playerAnnouncement` (`render.ts:460-472`) |
 | Either | "Connection lost. Reconnecting…" when the socket drops in a game, not on Home or Join                                                                                                             | `main.ts:233`                              |
 
 A view that changed nothing is not re-rendered or announced (`unchanged`, `main.ts:87-88`).

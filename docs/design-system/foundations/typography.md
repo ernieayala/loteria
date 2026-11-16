@@ -1,24 +1,13 @@
 # Typography
 
-Two font stacks, both Tailwind's defaults: `font-sans` (the system UI face, so no font downloads to a phone at the table) for everything, and `font-mono` for room codes. Sizes come from Tailwind's rem scale, so a player's text-size setting applies everywhere. A card's name and number are printed on its art; the page adds only the number on small cards and the meaning under the caller's card.
+Two font stacks, both Tailwind's defaults: `font-sans` (the system UI face, so no font downloads to a phone at the table) for everything, and `font-mono` for room codes. Sizes come from Tailwind's rem scale, so a player's text-size setting applies everywhere. A card's name and number are printed on its art; the page adds only the meaning under a card face.
 
 ## Rules
 
 ### Screen text uses the rem scale
 
-- Conforming: `text-sm` on the round status (`render.ts:605`).
+- Conforming: `text-sm` on the round status (`render.ts:620`).
 - Non-conforming: `text-[13px]`, which ignores the reader's text size.
-
-Check: review.
-
-### The card number reads a card token
-
-| Token                | Value    | Use                                                                                                                           |
-| -------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `--text-card-number` | `0.7rem` | A tabla cell's or thumbnail's number, on its own backing above the bean; fixed so it stays legible on any card (`styles.css`) |
-
-- Conforming: `text-card-number` in `cardNumberHtml` (`render.ts`).
-- Non-conforming: `text-[0.7rem]`, a raw value where a token belongs.
 
 Check: review.
 
@@ -43,7 +32,7 @@ Check: review.
 
 ### Case
 
-Copy is sentence case ([voice](../content/voice.md)). Two things are upper case on screen: room codes, typed or shown (`uppercase` on the field, `render.ts:522`), and the Players label (`render.ts:589`). ACHIK PUKLLAY is upper case in the copy itself, not by a class.
+Copy is sentence case ([voice](../content/voice.md)). Two things are upper case on screen: room codes, typed or shown (`uppercase` on the field, `render.ts:537`), and the Players label (`render.ts:604`). ACHIK PUKLLAY is upper case in the copy itself, not by a class.
 
 - Non-conforming: `uppercase` on a button label.
 
@@ -53,10 +42,10 @@ Check: review.
 
 | Text                                    | Behavior                                                                          |
 | --------------------------------------- | --------------------------------------------------------------------------------- |
-| A player's name in their own header     | `truncate` on one line (`render.ts:657`)                                          |
-| A claimant's name in the claim heading  | `truncate`; the heading's `aria-label` holds the whole name (`render.ts:396-397`) |
+| A player's name in their own header     | `truncate` on one line (`render.ts:672`)                                          |
+| A claimant's name in the claim heading  | `truncate`; the heading's `aria-label` holds the whole name (`render.ts:411-412`) |
 | A card's meaning under a card face      | Wraps between words, centered                                                     |
-| A seat's name in the caller's seat list | One line (`whitespace-nowrap`); the list scrolls sideways (`render.ts:334`)       |
+| A seat's name in the caller's seat list | One line (`whitespace-nowrap`); the list scrolls sideways (`render.ts:349`)       |
 | Anything else                           | Wraps between words                                                               |
 
 - Non-conforming: `truncate` on copy a player must read in full, such as the claim verdict.

@@ -20,19 +20,16 @@
 /*
  * The design tokens this app adds to the theme.
  *
- * `edge` is the outline of anything a player has to find: card faces, tabla cells, text fields.
- * It clears 3:1 against every surface it sits on (WCAG 1.4.11).
+ * `edge` is the outline of anything a player has to find that has no frame of its own: text fields,
+ * the claim-sent box. Cards carry the art's printed frame and no outline of ours. It clears 3:1
+ * against every surface it sits on (WCAG 1.4.11).
  *
- * A card's number, on a tabla cell or a thumbnail, stays a fixed rem size: it sits on its own
- * backing above the bean and must stay legible however narrow the card.
- *
- * Tabla cells are width containers, so `cqw` is 1% of the cell's own width and the bean scales with
- * the card it lies on.
+ * A card on a tabla is a width container, so `cqw` is 1% of the card's own width and the bean
+ * scales with the card it lies on.
  */
 @theme {
   --color-edge: color-mix(in oklab, var(--color-base-content) 70%, transparent);
 
-  --text-card-number: 0.7rem;
   --spacing-bean: 38cqw;
 }
 
