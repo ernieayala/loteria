@@ -10,7 +10,7 @@ Every word the page shows or speaks lives in `packages/web/src/i18n.ts`, in Engl
 | `Strings`     | One interface every language implements. A string missing from one language fails `tsc --build`                                                               |
 | Groups        | Keys run in screen order, separated by a blank line: connection and errors, home, caller, player, spoken (`said…`)                                            |
 | Keys          | camelCase, named for the meaning, not the words: `claimRejected`, not `thatOneDidntCount`                                                                     |
-| Interpolation | A string with values is a function with named parameters: `roundStatus: (round, rule, called, left) => …`, `players: (count) => …`                            |
+| Interpolation | A string with values is a function with named parameters: `roundStatus: (round, rule, called) => …`, `players: (count) => …`                                  |
 | Errors        | `errors: Record<ErrorCode, string>`, keyed by the server's codes, so every code has a sentence in every language                                              |
 | Per rule      | A string that differs by rule or prize is a `Record` keyed by it: `rules` by `WinRule`; `claimValid`, `claimInvalid`, `won`, `youWon`, `keepGoing` by `Prize` |
 | Card meanings | `cardMeanings`, one per card in deck order, read through `cardMeaning(t, id)`, which throws for a card with none                                              |

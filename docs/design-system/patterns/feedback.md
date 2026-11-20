@@ -8,7 +8,7 @@ How the app tells a player or caller what happened. Five channels, each with one
 | Notice (toast)      | A short message about something that did not show on screen: a refused move, a copied link | `flash` (`main.ts:151-157`) into `#notice`                |
 | Reconnecting banner | The socket is down; the screen is stale and actions are paused                             | `offlineBannerHtml` (`render.ts:430-431`)                 |
 | Announcement        | What a screen reader should hear after a view arrives                                      | `announce` (`main.ts:147-149`) into `#announcer`          |
-| Confirmation        | Before an action that cannot be undone                                                     | `confirm()` (`main.ts:295`)                               |
+| Confirmation        | Before an action that cannot be undone                                                     | `confirm()` (`main.ts:275`, `main.ts:297`)                |
 
 ## Notices
 
@@ -23,11 +23,11 @@ Check: `tsc --build` (`errors` is a `Record<ErrorCode, string>`, so a code witho
 
 The live regions sit outside `#app` (`index.html:10-12`), so they persist across renders; a region rebuilt with its new text is often not read. `#announcer` is `role="status"`, polite; `#notice` is `role="alert"`.
 
-| Seat   | Hears                                                                                                                                                                                             | Function                                   |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Caller | A new round; a prize won ("Achik Pukllay! Ana got the line."); a new claim and whether it is valid; the latest card called, with its meaning; who joined. One per view, in that order of priority | `hostAnnouncement` (`render.ts:438-453`)   |
-| Player | A new round; a prize won, by them or by another; "Sent to the Kawak…"; a claim turned down; a new call only while Last card shows it. Otherwise cards are heard from the caller                   | `playerAnnouncement` (`render.ts:460-472`) |
-| Either | "Connection lost. Reconnecting…" when the socket drops in a game, not on Home or Join                                                                                                             | `main.ts:233`                              |
+| Seat   | Hears                                                                                                                                                                                                                  | Function                                 |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Caller | A new round; a prize won ("Achik Pukllay! Ana got the line."); a new claim and whether it is valid; the latest card called, with its meaning; who joined. One per view, in that order of priority                      | `hostAnnouncement` (`render.ts:438-453`) |
+| Player | A new round; a prize won, by them or by another; "Sent to the Kawak…"; a claim turned down; each new call, with its meaning, as it lands in the calls row; a call they open large (`cardAnnouncement`, from `main.ts`) | `playerAnnouncement` (`render.ts`)       |
+| Either | "Connection lost. Reconnecting…" when the socket drops in a game, not on Home or Join                                                                                                                                  | `main.ts:233`                            |
 
 A view that changed nothing is not re-rendered or announced (`unchanged`, `main.ts:87-88`).
 
@@ -39,7 +39,7 @@ Rules:
 
 ## Confirmations
 
-Leave and End game forget the seat token, so the seat cannot be taken back. Both ask first with the browser's `confirm()` and a sentence saying what is lost (`confirmLeave`, `confirmEndGame`).
+Leave and End game forget the seat token, so the seat cannot be taken back. New round deals every seat a new tabla, so the round on screen, its winner's tabla included, cannot be brought back; it also takes the spot where Grant win or Next card stood a tap earlier. All three ask first with the browser's `confirm()` and a sentence saying what is lost (`confirmLeave`, `confirmEndGame`, `confirmNewRound`). A round never ends into the next one without the Kawak saying so.
 
 - Non-conforming: a destructive action that does not ask.
 

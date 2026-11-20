@@ -19,10 +19,10 @@ Every button on every screen: daisyUI's `btn`, built by one function so the targ
 
 | Variant     | Class           | Use                                                                                                  |
 | ----------- | --------------- | ---------------------------------------------------------------------------------------------------- |
-| `primary`   | `btn-primary`   | The main way forward: Join, Next card, New round, Grant win; the chosen rule toggle; Last card on    |
+| `primary`   | `btn-primary`   | The main way forward: Join, Next card, New round, Grant win; the chosen rule toggle                  |
 | `secondary` | `btn-secondary` | The other way in: Start a game                                                                       |
 | `neutral`   | `btn-neutral`   | A side action or a no: Invite, Not a win                                                             |
-| `outline`   | `btn-outline`   | A toggle that is off: the rules not taken, beside the `primary` one that is; Last card off           |
+| `outline`   | `btn-outline`   | A toggle that is off: the rules not taken, beside the `primary` one that is                          |
 | `error`     | `btn-error`     | ACHIK PUKLLAY!, at `action` size only ([color](../foundations/color.md#every-pair-meets-wcag-22-aa)) |
 | `ghost`     | `btn-ghost`     | A quiet header control: the language switch, Back, Leave, End game                                   |
 
@@ -31,7 +31,6 @@ Every button on every screen: daisyUI's `btn`, built by one function so the targ
 | Size      | Classes                                                         | Use                                                                                                            |
 | --------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `action`  | `btn-lg h-14 w-full text-xl font-bold`                          | The one main action at the bottom of a screen. Its 20px bold label is large text                               |
-| `side`    | `h-14 w-20 shrink-0 px-2 leading-tight`                         | Last card, before the shout in its row: as tall, narrow enough that the shout still fits at 320px              |
 | `block`   | `btn-lg w-full`                                                 | Full width inside a form or panel                                                                              |
 | `choice`  | `h-auto min-h-24 w-full flex-col gap-1 py-4 text-2xl font-bold` | The home screen's two ways in. The label is a title and a `text-base font-normal` line under it, both app copy |
 | `regular` | none                                                            | The rule toggles                                                                                               |
@@ -57,9 +56,9 @@ Labels wrap between words; daisyUI buttons grow in height.
 - Don't: `<button class="btn btn-primary">` in a screen function.
 - Check: review.
 
-**At most one `action`-size button per screen, and it is last.** One `side` button may share its row, before it.
+**At most one `action`-size button per screen, and it is last.**
 
-- Do: `hostActionHtml` returns exactly one (`render.ts:561-581`); `playerActionHtml` puts Last card before the shout.
+- Do: `hostActionHtml` and `playerActionHtml` each return exactly one.
 - Don't: Grant win and Not a win side by side at `action` size. Only the one the claim allows is shown.
 - Check: review.
 

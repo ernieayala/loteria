@@ -64,7 +64,7 @@ Check: review.
 
 ### Status lines join with a middle dot
 
-`" · "` between parts: "Round 2 · Line only · 14 called · 40 left", "Room ABCD · Round 2 · Line, then full tabla", and the page title "Room ABCD · Achik Pukllay".
+`" · "` between parts: "Round 2 · Line only · 14 called", "Room ABCD · Round 2 · Line, then full tabla", and the page title "Room ABCD · Achik Pukllay".
 
 Check: review.
 

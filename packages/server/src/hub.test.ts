@@ -122,23 +122,24 @@ describe('hub', () => {
     host.close();
   });
 
-  it('sends a player the latest call only, never the ones before it', async () => {
+  it('sends a player the last five calls only, newest first, never the ones before them', async () => {
     const { host, player, view: joined } = await hostAndJoin();
-    expect(joined.last).toBeNull();
-    host.send({ t: 'draw' });
-    await host.next('host-view', (m) => m.view.called.length === 1);
-    host.send({ t: 'draw' });
-    const { called } = (await host.next('host-view', (m) => m.view.called.length === 2)).view;
+    expect(joined.recent).toEqual([]);
+    let called: number[] = [];
+    for (let count = 1; count <= 6; count++) {
+      host.send({ t: 'draw' });
+      called = (await host.next('host-view', (m) => m.view.called.length === count)).view.called;
+    }
     player.send({ t: 'claim' });
     const view = (await player.next('player-view', (m) => m.view.claim === 'pending')).view;
-    expect(view.last).toBe(called[1]);
+    expect(view.recent).toEqual(called.slice(1).reverse());
     expect(Object.keys(view).sort()).toEqual([
       'claim',
       'code',
-      'last',
       'marked',
       'name',
       'prize',
+      'recent',
       'round',
       'rule',
       'tabla',

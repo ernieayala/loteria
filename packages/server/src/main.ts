@@ -1,7 +1,7 @@
 import { networkInterfaces, type NetworkInterfaceInfo } from 'node:os';
 import { startServer } from './server.js';
 
-const DEFAULT_PORT = 3000;
+const DEFAULT_PORT = 8001;
 
 function readPort(raw: string | undefined): number {
   if (raw === undefined || raw === '') return DEFAULT_PORT;

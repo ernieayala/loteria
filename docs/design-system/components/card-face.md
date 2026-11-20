@@ -1,6 +1,6 @@
 # Card face
 
-One called card standing alone: the caller's current card, and the last call on a player's phone while Last card is on. Earlier calls are thumbnails in the [called row](called-row.md), on the caller's screen only.
+One called card standing alone: the caller's current card, and a call a player tapped in their [called row](called-row.md#showing-a-call-large), shown large for a few seconds. Earlier calls are thumbnails in the called row.
 
 ## Anatomy
 
@@ -15,9 +15,9 @@ One called card standing alone: the caller's current card, and the last call on 
 
 ## Function
 
-`currentCardHtml(id, t)` (`packages/web/src/render.ts`): a `<figure>` with two grid rows, the art (`minmax(0,1fr)`) and the meaning (`auto`).
+`currentCardHtml(id, t)` (`packages/web/src/render.ts`): a `<figure>` with two grid rows, the art (`minmax(0,1fr)`) and the meaning (`auto`). The art is `absolute inset-0` inside a `relative` box that stretches over its row, as on a [tabla](tabla.md) card. An `<img>` sized by percentage as the grid item itself is drawn the whole figure's height in Safari, over the meaning.
 
-The figure is a size container (`[container-type:size]`), so it has no size of its own and takes the slot the screen leaves: `cardSectionHtml(id, label, t, attrs?)` puts it in a labelled grid track that fills the flexible area, for `hostHtml` and `playerHtml` alike. Without containment the art's own pixels would set the slot's height and push the main action off the screen.
+The figure is a size container (`[container-type:size]`), so it has no size of its own and takes the slot the screen leaves: `cardSectionHtml(id, label, t)` puts it in a labelled grid track that fills the flexible area of `hostHtml`; `zoomedCardHtml` puts it in a fixed-height panel over a player's screen. Without containment the art's own pixels would set the slot's height and push the main action off the screen.
 
 ## Screen reader
 

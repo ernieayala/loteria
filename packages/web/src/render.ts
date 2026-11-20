@@ -59,8 +59,6 @@ const BUTTON_VARIANT = {
 const BUTTON_SIZE = {
   /** The one main action at the bottom of a screen. A 20px bold label counts as large text. */
   action: 'btn-lg h-14 w-full text-xl font-bold',
-  /** A narrow button sharing the main action's row, before it: as tall, so the row stays one line. */
-  side: 'h-14 w-20 shrink-0 px-2 leading-tight',
   /** Full width inside a form or panel. */
   block: 'btn-lg w-full',
   /** One of the home screen's two ways in: a large full-width card with a title and a line under it. */
@@ -132,10 +130,15 @@ function artHtml(id: CardId, where: keyof typeof ART_SIZES, attrs: string): stri
  * The figure is a size container, so it has no size of its own: it takes the slot the screen
  * leaves, and the art scales into it. Without that the art's own pixels set the slot's height and
  * push the main action off the screen.
+ *
+ * The art is pinned inside a box that stretches over its row, as a tabla card's is. An image sized
+ * by percentage as a grid item is drawn the whole figure's height in Safari, over the meaning.
  */
 function currentCardHtml(id: CardId, t: Strings): string {
   return `<figure class="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] justify-items-center gap-1 [container-type:size]">
-    ${artHtml(id, 'current', `alt="${id}, ${esc(card(id).name)}" lang="${KICHWA}" class="size-full min-h-0 object-contain drop-shadow-md"`)}
+    <div class="relative min-h-0 justify-self-stretch">
+      ${artHtml(id, 'current', `alt="${id}, ${esc(card(id).name)}" lang="${KICHWA}" class="absolute inset-0 size-full object-contain drop-shadow-md"`)}
+    </div>
     <figcaption class="text-center text-2xl font-bold">${esc(cardMeaning(t, id))}</figcaption>
   </figure>`;
 }
@@ -143,28 +146,53 @@ function currentCardHtml(id: CardId, t: Strings): string {
 /**
  * A {@link currentCardHtml} filling the screen's flexible area. A grid track gives the card a
  * settled height to scale into; a flex item's grown size in this min-height column does not.
- * `attrs` are further attributes, already escaped.
  */
-function cardSectionHtml(id: CardId, label: string, t: Strings, attrs = ''): string {
-  return `<section aria-label="${label}" ${attrs} class="grid min-h-40 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)]">
+function cardSectionHtml(id: CardId, label: string, t: Strings): string {
+  return `<section aria-label="${label}" class="grid min-h-40 flex-1 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)]">
     ${currentCardHtml(id, t)}
   </section>`;
 }
 
-/** Earlier calls, newest first, in one row that scrolls sideways so it never pushes the page down. */
-function calledRowHtml(ids: readonly CardId[], t: Strings): string {
+const thumbArtHtml = (id: CardId): string => artHtml(id, 'thumb', 'alt="" class="block aspect-[8/11] w-full"');
+
+/** An earlier call on the caller's screen: a 48px picture. */
+const callerThumbHtml = (id: CardId): string =>
+  `<div role="img" lang="${KICHWA}" aria-label="${id}, ${esc(card(id).name)}" class="w-12">${thumbArtHtml(id)}</div>`;
+
+/**
+ * A latest call on a player's phone: a button that shows the card large ({@link zoomedCardHtml}),
+ * pressed while it does. The art is 32px wide so the row leaves the tabla its room on a 568px-tall
+ * screen with the prize banner up; the button around it is 44px wide, a full touch target.
+ */
+const playerThumbHtml = (id: CardId, zoomed: CardId | null): string =>
+  `<button type="button" data-action="zoom" data-card="${id}" aria-pressed="${id === zoomed}" lang="${KICHWA}" aria-label="${id}, ${esc(card(id).name)}" class="flex w-11 cursor-pointer justify-center select-none">
+    <span class="block w-8">${thumbArtHtml(id)}</span>
+  </button>`;
+
+/**
+ * Calls as thumbnails, newest first, in one row that scrolls sideways so it never pushes the page
+ * down: the caller's earlier calls, and a player's latest ones. `label` says which; `thumb` draws each.
+ */
+function calledRowHtml(ids: readonly CardId[], label: string, thumb: (id: CardId) => string): string {
   if (!ids.length) return '';
-  return `<ol tabindex="0" aria-label="${t.calledBefore}" class="flex gap-1.5 overflow-x-auto rounded-box pb-1">
-    ${ids
-      .map(
-        (
-          id,
-        ) => `<li class="shrink-0"><div role="img" lang="${KICHWA}" aria-label="${id}, ${esc(card(id).name)}" class="w-12">
-          ${artHtml(id, 'thumb', 'alt="" class="block aspect-[8/11] w-full"')}
-        </div></li>`,
-      )
-      .join('')}
+  // The id is how focus finds the row again after a render; a screen has one row at most.
+  return `<ol id="called-row" tabindex="0" aria-label="${label}" class="flex gap-1.5 overflow-x-auto rounded-box pb-1">
+    ${ids.map((id) => `<li class="shrink-0">${thumb(id)}</li>`).join('')}
   </ol>`;
+}
+
+/**
+ * A called card large in the middle of the screen, over everything, with its meaning, after a
+ * player taps its thumbnail. A tap anywhere closes it, and main.ts closes it by itself after a few
+ * seconds. It pictures what the pressed thumbnail and its announcement already say, so it is hidden
+ * from screen readers; a keyboard closes it from the thumbnail, which keeps focus, or with Escape.
+ */
+function zoomedCardHtml(id: CardId, t: Strings): string {
+  return `<div data-action="unzoom" aria-hidden="true" class="fixed inset-0 z-[5] grid cursor-pointer place-items-center bg-base-content/50 p-4">
+    <div class="grid h-[min(75svh,40rem)] w-full max-w-md grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)] rounded-box bg-base-100 p-3 shadow-xl">
+      ${currentCardHtml(id, t)}
+    </div>
+  </div>`;
 }
 
 /**
@@ -434,6 +462,9 @@ const offlineBannerHtml = (online: boolean, t: Strings): string =>
 const newWinner = (prev: { winners: readonly WinnerView[] } | null, next: { winners: readonly WinnerView[] }) =>
   next.winners.length > (prev?.winners.length ?? 0) ? next.winners.at(-1) : undefined;
 
+/** A card as a screen reader hears it: number, Kichwa name, and meaning. */
+export const cardAnnouncement = (id: CardId, t: Strings): string => t.saidCard(id, card(id).name, cardMeaning(t, id));
+
 /** What the caller's screen reader should hear after a view arrives, or '' for nothing new. */
 export function hostAnnouncement(prev: HostView | null, next: HostView, t: Strings): string {
   if (prev && prev.round !== next.round) return t.saidRoundStarted(next.round);
@@ -442,9 +473,7 @@ export function hostAnnouncement(prev: HostView | null, next: HostView, t: Strin
   const claim = next.claims.find((c) => !prev?.claims.some((p) => p.playerId === c.playerId));
   if (claim) return t.saidClaim(claim.name, claim.cells !== null);
   const latest = next.called.at(-1);
-  if (latest !== undefined && latest !== prev?.called.at(-1)) {
-    return t.saidCard(latest, card(latest).name, cardMeaning(t, latest));
-  }
+  if (latest !== undefined && latest !== prev?.called.at(-1)) return cardAnnouncement(latest, t);
   if (prev) {
     const joined = next.players.filter((p) => !prev.players.some((q) => q.id === p.id));
     if (joined.length) return t.saidJoined(joined.map((p) => p.name));
@@ -453,11 +482,11 @@ export function hostAnnouncement(prev: HostView | null, next: HostView, t: Strin
 }
 
 /**
- * What a player's screen reader should hear. A card only while the Last card toggle shows it, as a
- * sighted player sees it change; otherwise players hear cards from the caller. A claim is only
- * acknowledged as sent; the verdict comes when the caller gives it.
+ * What a player's screen reader should hear. Each new call, as a sighted player sees it arrive in
+ * the row above the tabla. A claim is only acknowledged as sent; the verdict comes when the caller
+ * gives it.
  */
-export function playerAnnouncement(prev: PlayerView | null, next: PlayerView, t: Strings, peeking: boolean): string {
+export function playerAnnouncement(prev: PlayerView | null, next: PlayerView, t: Strings): string {
   if (prev && prev.round !== next.round) return t.saidRoundStarted(next.round);
   const won = newWinner(prev, next);
   if (won) return won.playerId === next.you ? t.saidYouWon(won.prize) : t.saidWon(won.name, won.prize);
@@ -465,9 +494,8 @@ export function playerAnnouncement(prev: PlayerView | null, next: PlayerView, t:
     if (next.claim === 'pending') return t.claimSent;
     if (next.claim === 'rejected') return t.claimRejected;
   }
-  if (peeking && next.prize !== null && next.last !== null && next.last !== prev?.last) {
-    return t.saidCard(next.last, card(next.last).name, cardMeaning(t, next.last));
-  }
+  const latest = next.recent[0];
+  if (next.prize !== null && latest !== undefined && latest !== prev?.recent[0]) return cardAnnouncement(latest, t);
   return '';
 }
 
@@ -617,10 +645,10 @@ export function hostHtml(view: HostView, online: boolean, lang: Lang, origin: st
     }
 
     <section aria-label="${t.callsSoFar}" class="flex flex-col gap-1">
-      <p class="text-sm">${t.roundStatus(view.round, t.rules[view.rule], view.called.length, view.remaining)}</p>
+      <p class="text-sm">${t.roundStatus(view.round, t.rules[view.rule], view.called.length)}</p>
       ${
         // A tabla on screen, won or being checked, needs the room more than the history does.
-        view.prize === null || claim ? '' : calledRowHtml(earlier, t)
+        view.prize === null || claim ? '' : calledRowHtml(earlier, t.calledBefore, callerThumbHtml)
       }
     </section>
 
@@ -628,44 +656,32 @@ export function hostHtml(view: HostView, online: boolean, lang: Lang, origin: st
 }
 
 /**
- * The bottom row of a round in play: the Last card toggle, then the ACHIK PUKLLAY button, or word
- * that the claim is with the caller, taking the rest of the row. The toggle sits here, not in the
- * header, so it costs the tabla no height and is where the thumb is.
+ * The bottom row of a round in play: the ACHIK PUKLLAY button, or word that the claim is with the
+ * caller in its place.
  */
-function playerActionHtml(view: PlayerView, online: boolean, shown: CardId | null, t: Strings): string {
-  const lastCard = buttonHtml(t.lastCard, {
-    variant: shown === null ? 'outline' : 'primary',
-    size: 'side',
-    action: 'peek',
-    // Nothing to show before the first call. Offline it still shows the last call it was sent.
-    disabled: view.last === null,
-    // The id, not the action the card shares, is how focus finds the toggle after a render.
-    attrs: `id="last-card" aria-pressed="${shown !== null}"`,
-  });
-  const shout =
-    view.claim === 'pending'
-      ? `<p class="flex h-14 items-center justify-center rounded-box border-2 border-edge text-center text-xl font-bold">${t.claimSent}</p>`
-      : buttonHtml(t.shout, { variant: 'error', size: 'action', action: 'claim', disabled: !online });
-  // daisyUI buttons do not shrink, so the shout's full width is the wrapper's, which takes what is left.
+function playerActionHtml(view: PlayerView, online: boolean, t: Strings): string {
   return `${view.claim === 'rejected' ? `<p class="text-center font-semibold">${t.claimRejected}</p>` : ''}
-    <div class="flex gap-2">${lastCard}<div class="min-w-0 flex-1">${shout}</div></div>`;
+    ${
+      view.claim === 'pending'
+        ? `<p class="flex h-14 items-center justify-center rounded-box border-2 border-edge text-center text-xl font-bold">${t.claimSent}</p>`
+        : buttonHtml(t.shout, { variant: 'error', size: 'action', action: 'claim', disabled: !online })
+    }`;
 }
 
 /**
- * `rolling` holds the beans still rolling onto the card, with how far into their roll each is.
- * `peeking` is the player's Last card toggle: while it is on and the round plays, the last call takes
- * the tabla's place, and a tap on it or on the toggle brings the tabla back. It follows each new
- * call. The page keeps the toggle; the server never hears of it.
+ * `rolling` holds the beans still rolling onto the card, with how far into their roll each is. While
+ * the round plays, the latest calls sit in a row above the tabla, for a player who missed one, and
+ * `zoomed` is the one the player tapped to see large, if any. The page keeps it; the server never
+ * hears of it.
  */
 export function playerHtml(
   view: PlayerView,
   online: boolean,
   lang: Lang,
   rolling: ReadonlyMap<CardId, number>,
-  peeking: boolean,
+  zoomed: CardId | null,
 ): string {
   const t = STRINGS[lang];
-  const shown = peeking ? view.last : null;
   return `${offlineBannerHtml(online, t)}
     <header class="flex items-center justify-between gap-2">
       <div class="min-w-0 flex-1">
@@ -681,9 +697,8 @@ export function playerHtml(
         ? `${roundOverHtml(view.winners, view.round, t, view.you)}
           <p class="py-3 text-center">${t.waitingNewRound}</p>`
         : `${prizeStatusHtml(view.winners, view.prize, t, view.you)}
-          ${
-            shown === null
-              ? `<section aria-label="${t.yourTabla}" class="flex flex-1 flex-col">
+          ${calledRowHtml(view.recent, t.recentCalls, (id) => playerThumbHtml(id, zoomed))}
+          <section aria-label="${t.yourTabla}" class="flex flex-1 flex-col">
             ${tablaHtml(view.tabla, {
               round: view.round,
               marked: new Set(view.marked),
@@ -692,11 +707,9 @@ export function playerHtml(
               locked: view.claim === 'pending' || !online,
               rolling,
             })}
-          </section>`
-              : // A tap anywhere on the card closes it, for a quick look; the toggle is the control a keyboard reaches.
-                cardSectionHtml(shown, t.lastCard, t, 'data-action="peek"')
-          }
-          ${playerActionHtml(view, online, shown, t)}`
+          </section>
+          ${playerActionHtml(view, online, t)}
+          ${zoomed === null ? '' : zoomedCardHtml(zoomed, t)}`
     }`;
 }
 

@@ -4,17 +4,18 @@ The card art is the printed game's own: 54 illustrated cards, each with its numb
 
 ## Rules
 
-### A card's picture is its printed art, unaltered
+### A card's picture is its printed art, with the maker's mark
 
 The originals are full-resolution PNGs, kept out of git in `cards/` at the repo root (the repo is public). `npm run card-art` (`scripts/card-art.js`) turns them into the WebP files the page ships, in `packages/web/src/cards/`:
 
-| Rule                       | Detail                                                                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Two widths per card        | `NN-320.webp` (320x440) and `NN-720.webp` (720x990), named by the two-digit card number. About 25 KB and 90 KB                                    |
-| One aspect ratio, 8:11     | Every original is scaled to the same size. The originals differ from 8:11 by under 2%, too little to see                                          |
-| Transparent corners kept   | The art's hand-drawn frame has transparent corners; they show the surface beneath                                                                 |
-| Served fingerprinted       | `art.ts` imports them through Vite, so the server caches them for good; a missing file fails at page load, naming the card and `npm run card-art` |
-| Never cropped or recolored | Every place shows the whole card with `object-contain`: the printed name is part of what a player learns                                          |
+| Rule                       | Detail                                                                                                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Two widths per card        | `NN-320.webp` (320x440) and `NN-720.webp` (720x990), named by the two-digit card number. About 25 KB and 90 KB                                                                                                           |
+| One aspect ratio, 8:11     | Every original is scaled to the same size. The originals differ from 8:11 by under 2%, too little to see                                                                                                                 |
+| Transparent corners kept   | The art's hand-drawn frame has transparent corners; they show the surface beneath                                                                                                                                        |
+| Served fingerprinted       | `art.ts` imports them through Vite, so the server caches them for good; a missing file fails at page load, naming the card and `npm run card-art`                                                                        |
+| Never cropped or recolored | Every place shows the whole card with `object-contain`: the printed name is part of what a player learns                                                                                                                 |
+| Watermarked in the file    | "© Siembra Press", the maker, faint white with a fainter dark edge, corner to corner across the picture. Drawn into the file, so a saved card keeps it; never an overlay on the page, which a saved file would not carry |
 
 Each `<img>` carries `srcset` with both widths and a `sizes` for where it sits (`ART_SIZES` in `render.ts`), so a tabla cell fetches the 320 file and the caller's current card the 720 one on a sharp screen.
 

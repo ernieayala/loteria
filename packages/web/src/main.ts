@@ -18,6 +18,7 @@ import {
 import { isLang, loadLang, pickLang, saveLang, STRINGS, type Lang } from './i18n.js';
 import {
   BEAN_ROLL_MS,
+  cardAnnouncement,
   homeHtml,
   hostAnnouncement,
   hostHtml,
@@ -40,6 +41,8 @@ type Screen =
   | { readonly kind: 'player'; readonly view: PlayerView };
 
 const NOTICE_MS = 2600;
+/** How long a tapped call stays large before it closes by itself. */
+const ZOOM_MS = 3000;
 
 /** A `data-rule` read back from the page is DOM data, so it is checked before it is sent. */
 const isWinRule = (value: unknown): value is WinRule => WIN_RULES.includes(value as WinRule);
@@ -65,8 +68,9 @@ let form: JoinForm = { code: joinParam, name: loadName(), codeGiven: joinParam.l
  * it on instead of restarting it or cutting it short.
  */
 const thrownAt = new Map<CardId, number>();
-/** The player's Last card toggle. Off for each new round and each new seat, so it never opens by itself. */
-let peeking = false;
+/** The latest call a player tapped to see large, or null. */
+let zoomed: CardId | null = null;
+let zoomTimer: ReturnType<typeof setTimeout> | undefined;
 
 /** The beans still rolling, with the ms of their roll already played. Finished ones are forgotten. */
 function rollingBeans(): ReadonlyMap<CardId, number> {
@@ -119,7 +123,7 @@ function render(): void {
           ? waitingHtml(online, lang)
           : screen.kind === 'host'
             ? hostHtml(screen.view, online, lang, location.origin)
-            : playerHtml(screen.view, online, lang, rollingBeans(), peeking);
+            : playerHtml(screen.view, online, lang, rollingBeans(), zoomed);
   // The page language tells screen readers which voice to read with.
   document.documentElement.lang = lang;
   document.title = STRINGS[lang].title(screen.kind === 'host' || screen.kind === 'player' ? screen.view.code : null);
@@ -146,6 +150,14 @@ function showJoin(): void {
 
 function announce(text: string): void {
   if (text) announcer.textContent = text;
+}
+
+/** Show a call large, or close it with null. Each one shown closes by itself after ZOOM_MS. */
+function zoom(id: CardId | null): void {
+  clearTimeout(zoomTimer);
+  zoomed = id;
+  if (id !== null) zoomTimer = setTimeout(() => zoom(null), ZOOM_MS);
+  render();
 }
 
 function flash(message: string): void {
@@ -179,9 +191,12 @@ function onMessage(message: ServerMessage): void {
         // The first view after joining or reconnecting: its beans were already down.
         thrownAt.clear();
       }
-      if (prev?.round !== message.view.round) peeking = false;
+      if (prev?.round !== message.view.round) {
+        clearTimeout(zoomTimer);
+        zoomed = null;
+      }
       screen = { kind: 'player', view: message.view };
-      announce(playerAnnouncement(prev, message.view, STRINGS[lang], peeking));
+      announce(playerAnnouncement(prev, message.view, STRINGS[lang]));
       break;
     }
     case 'error':
@@ -271,6 +286,8 @@ app.addEventListener('click', (event) => {
       socket.send({ t: 'draw' });
       break;
     case 'new-round':
+      // New round takes the spot Grant win and Next card held a tap earlier, so a tap meant for them must not deal new tablas.
+      if (!confirm(STRINGS[lang].confirmNewRound)) return;
       socket.send({ t: 'new-round' });
       break;
     case 'claim':
@@ -279,9 +296,17 @@ app.addEventListener('click', (event) => {
     case 'mark':
       socket.send({ t: 'mark', card: Number(target.dataset.card) });
       break;
-    case 'peek':
-      peeking = !peeking;
-      render();
+    case 'zoom': {
+      // DOM data, so only a card in the player's row is shown; a second press on it closes it.
+      const id = Number(target.dataset.card);
+      if (screen.kind !== 'player' || !screen.view.recent.includes(id)) return;
+      if (id === zoomed) return zoom(null);
+      zoom(id);
+      announce(cardAnnouncement(id, STRINGS[lang]));
+      break;
+    }
+    case 'unzoom':
+      zoom(null);
       break;
     case 'grant':
       if (target.dataset.player) socket.send({ t: 'grant', player: target.dataset.player });
@@ -300,6 +325,10 @@ app.addEventListener('click', (event) => {
       break;
     }
   }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && zoomed !== null) zoom(null);
 });
 
 app.addEventListener('input', (event) => {

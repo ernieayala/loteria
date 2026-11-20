@@ -48,7 +48,7 @@ Check: review.
 
 ### Behavior hangs on `data-*`, never on classes
 
-`main.ts` dispatches every click through one listener on `#app` and `closest('[data-action]')` (`web/src/main.ts:240-303`), and reads `data-card`, `data-player`, `data-lang`, `data-rule` for the rest. The join form is found by its `submit` event. No script selects by class.
+`main.ts` dispatches every click through one listener on `#app` and `closest('[data-action]')` (`web/src/main.ts:240-305`), and reads `data-card`, `data-player`, `data-lang`, `data-rule` for the rest. The join form is found by its `submit` event. No script selects by class.
 
 - Non-conforming: `app.querySelector('.btn-primary')`.
 

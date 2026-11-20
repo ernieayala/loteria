@@ -94,7 +94,7 @@ describe('views', () => {
     expect(hostView('ABCD', { ...claimed, rule: 'full' }, new Set()).claims[1]?.cells).toBeNull();
   });
 
-  it("gives a player the prizes, their own tabla, beans and claim and the last call, never another player's or earlier calls", () => {
+  it("gives a player the prizes, their own tabla, beans and claim and the latest calls, never another player's", () => {
     const view = playerView('ABCD', game, 'p1');
     expect(view).toEqual({
       code: 'ABCD',
@@ -107,13 +107,17 @@ describe('views', () => {
       tabla: game.players[0]?.tabla,
       marked: [1],
       claim: 'none',
-      last: 2,
+      recent: [2, 1],
     });
     expect(JSON.stringify(view)).not.toContain('"tabla":[20');
   });
 
-  it('gives a player no last call before the first card', () => {
-    expect(playerView('ABCD', { ...game, calledCount: 0 }, 'p1').last).toBeNull();
+  it('gives a player no calls before the first card', () => {
+    expect(playerView('ABCD', { ...game, calledCount: 0 }, 'p1').recent).toEqual([]);
+  });
+
+  it('gives a player the last five calls only, newest first, never the ones before them', () => {
+    expect(playerView('ABCD', { ...game, calledCount: 9 }, 'p1').recent).toEqual([9, 8, 7, 6, 5]);
   });
 
   it("reports a player's claim as pending, then rejected", () => {

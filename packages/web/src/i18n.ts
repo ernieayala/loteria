@@ -51,10 +51,12 @@ export interface Strings {
   readonly ruleHeading: string;
   readonly firstCardPrompt: string;
   readonly callsSoFar: string;
-  readonly roundStatus: (round: number, rule: string, called: number, left: number) => string;
+  /** No count of the cards left: players can see the Kawak's screen, and a count would tell them how long the round may run. */
+  readonly roundStatus: (round: number, rule: string, called: number) => string;
   readonly calledBefore: string;
   readonly nextCard: string;
   readonly newRound: string;
+  readonly confirmNewRound: string;
   readonly claimValid: Record<Prize, string>;
   readonly claimInvalid: Record<Prize, string>;
   readonly wonBefore: (count: number) => string;
@@ -68,8 +70,8 @@ export interface Strings {
   readonly leave: string;
   readonly confirmLeave: string;
   readonly yourTabla: string;
-  /** The toggle that shows a player the card read aloud last, and the card's section while shown. */
-  readonly lastCard: string;
+  /** The row of the latest calls above a player's tabla. */
+  readonly recentCalls: string;
   readonly shout: string;
   readonly claimSent: string;
   readonly claimRejected: string;
@@ -198,10 +200,11 @@ const en: Strings = {
   ruleHeading: 'To win this round',
   firstCardPrompt: 'When everyone is in, press Next card.',
   callsSoFar: 'Calls so far',
-  roundStatus: (round, rule, called, left) => `Round ${round} · ${rule} · ${called} called · ${left} left`,
+  roundStatus: (round, rule, called) => `Round ${round} · ${rule} · ${called} called`,
   calledBefore: 'Called before, newest first',
   nextCard: 'Next card',
   newRound: 'New round',
+  confirmNewRound: "Start a new round? Everyone gets a new tabla, and this round's tablas are cleared.",
   claimValid: { full: 'Valid: every card was called.', line: 'Valid: a full line was called.' },
   claimInvalid: { full: 'Not valid: not every card was called.', line: 'Not valid: no full line was called.' },
   wonBefore: (count) => `Already won ${count}`,
@@ -215,7 +218,7 @@ const en: Strings = {
   leave: 'Leave',
   confirmLeave: 'Leave this game? You will not get this tabla back.',
   yourTabla: 'Your tabla',
-  lastCard: 'Last card',
+  recentCalls: 'Latest calls, newest first',
   shout: 'ACHIK PUKLLAY!',
   claimSent: 'Sent to the Kawak…',
   claimRejected: "That one didn't count. Keep playing.",
@@ -340,10 +343,11 @@ const es: Strings = {
   ruleHeading: 'Para ganar esta ronda',
   firstCardPrompt: 'Cuando estén todos, toca Siguiente carta.',
   callsSoFar: 'Cartas cantadas',
-  roundStatus: (round, rule, called, left) => `Ronda ${round} · ${rule} · ${called} cantadas · quedan ${left}`,
+  roundStatus: (round, rule, called) => `Ronda ${round} · ${rule} · ${called} cantadas`,
   calledBefore: 'Cantadas antes, la más reciente primero',
   nextCard: 'Siguiente carta',
   newRound: 'Nueva ronda',
+  confirmNewRound: '¿Empezar una nueva ronda? Todos reciben una tabla nueva y se borran las de esta ronda.',
   claimValid: { full: 'Válido: todas las cartas fueron cantadas.', line: 'Válido: hay una línea completa cantada.' },
   claimInvalid: {
     full: 'No válido: no todas las cartas fueron cantadas.',
@@ -360,7 +364,7 @@ const es: Strings = {
   leave: 'Salir',
   confirmLeave: '¿Salir de este juego? No podrás recuperar esta tabla.',
   yourTabla: 'Tu tabla',
-  lastCard: 'Última carta',
+  recentCalls: 'Últimas cantadas, la más reciente primero',
   shout: 'ACHIK PUKLLAY!',
   claimSent: 'Enviado al Kawak…',
   claimRejected: 'Esa no contó. Sigue jugando.',

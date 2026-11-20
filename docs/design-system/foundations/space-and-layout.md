@@ -10,7 +10,7 @@ Every screen renders into `#app` (`packages/web/index.html:14-17`): one centered
 | Fixed rows, one flexible area, the action last | Header and status rows take their own height; one area takes `flex-1` (the current card, the tabla, the winner's tabla, a claim); the main action sits at the bottom                  |
 | The flexible area has a floor                  | `min-h-40` on the card-face slot (`render.ts:149`); a tabla card never below 44px wide on a player's phone, `3rem` tall elsewhere (`render.ts:332`). Below the floor the page scrolls |
 
-- Conforming: `playerHtml` is a header, the tabla section with `flex-1`, then the row with Last card and the ACHIK PUKLLAY! button (`render.ts:670-700`).
+- Conforming: `playerHtml` is a header, the calls row, the tabla section with `flex-1`, then the ACHIK PUKLLAY! button.
 - Non-conforming: a second `flex-1` area on the same screen, which splits the room and leaves the tabla too short.
 
 Check: review, and the phone-size pass in [screens](../patterns/screens.md#checking-a-screen).
@@ -34,11 +34,12 @@ Check: review.
 
 ## Targets
 
-| Target          | Size                                     | Where                                                                               |
-| --------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
-| Any button      | At least 44px tall                       | `.btn { min-height: 2.75rem }` (`styles.css:211-213`), over daisyUI's 32px `btn-sm` |
-| A tabla card    | At least 44px wide, at 8:11              | `TABLA_CARD_MIN_HEIGHT.interactive` in the tabla's floor (`render.ts:332`)          |
-| The main action | 56px tall, the full width its row leaves | `h-14 w-full` in `BUTTON_SIZE.action` (`render.ts:61`)                              |
+| Target                                     | Size                                     | Where                                                                               |
+| ------------------------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------- |
+| Any button                                 | At least 44px tall                       | `.btn { min-height: 2.75rem }` (`styles.css:211-213`), over daisyUI's 32px `btn-sm` |
+| A tabla card                               | At least 44px wide, at 8:11              | `TABLA_CARD_MIN_HEIGHT.interactive` in the tabla's floor (`render.ts:332`)          |
+| A called-row thumbnail on a player's phone | 44px wide and 44px tall, around 32px art | `w-11` around `w-8` in `playerThumbHtml`                                            |
+| The main action                            | 56px tall, the full width its row leaves | `h-14 w-full` in `BUTTON_SIZE.action` (`render.ts:61`)                              |
 
 - Non-conforming: a `btn-xs` in a header, or a clickable `<span>`.
 

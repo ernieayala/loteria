@@ -6,9 +6,10 @@
  *
  * The caller sees everything: the calls, every seat's connection state, and each waiting claim with
  * the tabla behind it. A player sees only their own tabla, their beans and the state of their own
- * claim. Players hear the cards at the table, so their view carries only the latest call, for a
- * player who missed it, and never the earlier ones: keeping up still means listening. Every seat is
- * told the rule, the prize in play, and each winner with their tabla, so the table can check it.
+ * claim. Players hear the cards at the table, so their view carries only the last few calls, for a
+ * player who missed one, and never the round's whole history: keeping up still means listening.
+ * Every seat is told the rule, the prize in play, and each winner with their tabla, so the table
+ * can check it.
  */
 
 import { z } from 'zod';
@@ -18,6 +19,8 @@ import { PRIZES, WIN_RULES } from './tabla.js';
 
 export const ROOM_CODE_LENGTH = 4;
 export const NAME_MAX_LENGTH = 20;
+/** How many of the latest calls a player's view carries. */
+export const RECENT_CALLS = 5;
 /** The URL path the game socket upgrades on, the same for the page and the server. */
 export const SOCKET_PATH = '/ws';
 
@@ -115,8 +118,8 @@ export const PlayerViewSchema = z.object({
   tabla: z.array(CardIdSchema),
   marked: z.array(CardIdSchema),
   claim: z.enum(CLAIM_STATES),
-  /** The card read aloud last, or null before the round's first. Never the calls before it. */
-  last: CardIdSchema.nullable(),
+  /** The latest calls, newest first, at most {@link RECENT_CALLS}; empty before the round's first. */
+  recent: z.array(CardIdSchema).max(RECENT_CALLS),
 });
 export type PlayerView = z.infer<typeof PlayerViewSchema>;
 
@@ -180,7 +183,7 @@ export function hostView(code: string, game: Game, connected: ReadonlySet<string
   };
 }
 
-/** What one player's phone shows: their own tabla, beans and claim, the last call, and the prizes and winners. */
+/** What one player's phone shows: their own tabla, beans and claim, the latest calls, and the prizes and winners. */
 export function playerView(code: string, game: Game, playerId: string): PlayerView {
   const player = seated(game, playerId);
   return {
@@ -192,6 +195,6 @@ export function playerView(code: string, game: Game, playerId: string): PlayerVi
     tabla: [...player.tabla],
     marked: [...player.marked],
     claim: game.claims.includes(playerId) ? 'pending' : game.rejected.includes(playerId) ? 'rejected' : 'none',
-    last: calledCards(game).at(-1) ?? null,
+    recent: calledCards(game).slice(-RECENT_CALLS).reverse(),
   };
 }

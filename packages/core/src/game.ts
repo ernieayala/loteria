@@ -6,7 +6,7 @@
  * {@link Rng}; the same seed and the same moves produce the same game.
  *
  * The game is played in person. Players hear the cards from the caller; a phone shows at most the
- * latest one. So a player may put a bean on any card of their tabla, called or not. Shouting ACHIK
+ * last few. So a player may put a bean on any card of their tabla, called or not. Shouting ACHIK
  * PUKLLAY only puts a claim in front of the caller; the caller checks it and grants the win or
  * turns it down.
  *
